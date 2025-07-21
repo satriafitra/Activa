@@ -46,22 +46,22 @@ class SidebarOverlay extends StatelessWidget {
                         fit: BoxFit.cover,
                       ),
                       borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(30),
-                        bottomLeft: Radius.circular(30)
+                        bottomRight: Radius.circular(24),
+                        bottomLeft: Radius.circular(24)
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 26),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Text(
-                          "Start a new streak by completing habits",
-                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                          "One step ahead dude!",
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                         SizedBox(height: 24),
                         Text(
-                          "0 days",
+                          "1 days",
                           style: GoogleFonts.poppins(
                             fontSize: 28,
                             color: Colors.white,

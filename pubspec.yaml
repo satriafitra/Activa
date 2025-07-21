@@ -21,6 +21,8 @@ dependencies:
   flutter_slidable: ^3.0.0
   swipeable_tile: ^2.0.1
   iconsax: ^0.0.8
+  intl: ^0.18.1
+  table_calendar: ^3.0.9
 
 dev_dependencies:
   flutter_test:

@@ -1,11 +1,18 @@
-import 'package:active/pages/navbar.dart';
+
 import 'package:active/components/sidebar.dart';
 import 'package:flutter/material.dart';
 import 'pages/habit_list_page.dart'; // pastikan ini sesuai path
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
-void main() {
-  runApp(const MyApp());
+
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
+  runApp(MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

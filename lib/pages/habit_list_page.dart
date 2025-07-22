@@ -98,6 +98,22 @@ class _HabitListPageState extends State<HabitListPage> {
     );
   }
 
+  List<Widget> _buildHabitsByTime(String timeLabel) {
+    final habitsByTime = _habits
+        .where(
+            (habit) => habit.timeOfDay.toLowerCase() == timeLabel.toLowerCase())
+        .toList();
+
+    return habitsByTime.asMap().entries.map((entry) {
+      final habit = entry.value;
+      final isLast = entry.key == habitsByTime.length - 1;
+      final nextHabitTime =
+          isLast ? null : habitsByTime[entry.key + 1].timeOfDay;
+      final showLine = !isLast && nextHabitTime == habit.timeOfDay;
+      return _buildHabitCard(habit, showLine: showLine);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -272,11 +288,7 @@ class _HabitListPageState extends State<HabitListPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._habits
-                          .where((habit) =>
-                              habit.timeOfDay.toLowerCase() == 'pagi')
-                          .map((habit) => _buildHabitCard(habit))
-                          .toList(),
+                      ..._buildHabitsByTime('pagi'),
                       const SizedBox(height: 24),
                     ],
                     if (_habits
@@ -290,11 +302,7 @@ class _HabitListPageState extends State<HabitListPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._habits
-                          .where((habit) =>
-                              habit.timeOfDay.toLowerCase() == 'siang')
-                          .map((habit) => _buildHabitCard(habit))
-                          .toList(),
+                      ..._buildHabitsByTime('siang'),
                       const SizedBox(height: 24),
                     ],
                     if (_habits
@@ -308,11 +316,7 @@ class _HabitListPageState extends State<HabitListPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._habits
-                          .where((habit) =>
-                              habit.timeOfDay.toLowerCase() == 'malam')
-                          .map((habit) => _buildHabitCard(habit))
-                          .toList(),
+                      ..._buildHabitsByTime('malam'),
                     ],
                   ],
                 ),
@@ -346,7 +350,7 @@ class _HabitListPageState extends State<HabitListPage> {
     );
   }
 
-  Widget _buildHabitCard(Habit habit) {
+  Widget _buildHabitCard(Habit habit, {bool showLine = true}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -374,7 +378,9 @@ class _HabitListPageState extends State<HabitListPage> {
                     )
                   : null,
             ),
-            if (habit.name != "Read book")
+
+            // hanya tampil jika showLine true
+            if (showLine)
               Container(
                 width: 2,
                 height: 50,
@@ -387,101 +393,165 @@ class _HabitListPageState extends State<HabitListPage> {
         const SizedBox(width: 12),
 
         Expanded(
-          child: Slidable(
-            key: ValueKey(habit.id),
-            endActionPane: ActionPane(
-              motion: const DrawerMotion(),
-              children: [
-                SlidableAction(
-                  onPressed: (_) async {
-                    await _incrementHabitProgress(habit);
-                    _loadHabits(); // refresh list
+          child: habit.progress >= habit.quantity
+              ? InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => HabitDetailPage(habit: habit),
+                      ),
+                    );
                   },
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  label: '+1', // bisa juga dihapus kalau gak mau label
-                  borderRadius: BorderRadius.circular(12),
-                  flex: 1,
-                  spacing: 1,
-                ),
-                SlidableAction(
-                  onPressed: (_) async {
-                    await _completeHabit(habit);
-                    _loadHabits(); // refresh tampilan
-                  },
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  icon: Icons.done_all, // ikon selesai semua
-                  label: 'Selesai',
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ],
-            ),
-            child: InkWell(
-              // GANTI DARI GestureDetector KE INKWELL DI SINI
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => HabitDetailPage(habit: habit),
+                  borderRadius:
+                      BorderRadius.circular(16), // Biar efek ripple pas
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            IconData(int.parse(habit.icon),
+                                fontFamily: 'MaterialIcons'),
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                habit.name,
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                "${habit.progress}/${habit.quantity} ${habit.unit}",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
-              borderRadius: BorderRadius.circular(16), // biar ripple-nya rapi
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color.fromARGB(20, 0, 0, 0),
-                      blurRadius: 19,
-                    )
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Color(int.parse(habit.color)).withOpacity(0.2),
+                )
+              : Slidable(
+                  key: ValueKey(habit.id),
+                  endActionPane: ActionPane(
+                    motion: const DrawerMotion(),
+                    children: [
+                      SlidableAction(
+                        onPressed: (_) async {
+                          await _incrementHabitProgress(habit);
+                          _loadHabits();
+                        },
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        label: '+1',
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        IconData(int.parse(habit.icon),
-                            fontFamily: 'MaterialIcons'),
-                        color: Color(int.parse(habit.color)),
+                      SlidableAction(
+                        onPressed: (_) async {
+                          await _completeHabit(habit);
+                          _loadHabits();
+                        },
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        icon: Icons.done_all,
+                        label: 'Selesai',
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    ],
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => HabitDetailPage(habit: habit),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color.fromARGB(20, 0, 0, 0),
+                            blurRadius: 19,
+                          )
+                        ],
+                      ),
+                      child: Row(
                         children: [
-                          Text(habit.name,
-                              style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600, fontSize: 14)),
-                          const SizedBox(height: 2),
-                          Text(
-                            "${habit.progress}/${habit.quantity} ${habit.unit}",
-                            style: GoogleFonts.poppins(
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Color(int.parse(habit.color))
+                                  .withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              IconData(int.parse(habit.icon),
+                                  fontFamily: 'MaterialIcons'),
                               color: Color(int.parse(habit.color)),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(habit.name,
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "${habit.progress}/${habit.quantity} ${habit.unit}",
+                                  style: GoogleFonts.poppins(
+                                    color: Color(int.parse(habit.color)),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
         )
       ],
     );

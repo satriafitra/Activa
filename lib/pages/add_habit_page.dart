@@ -1,3 +1,4 @@
+import 'package:active/pages/habit_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:active/models/habit.dart';
 import 'package:active/db/database_helper.dart';
@@ -132,7 +133,7 @@ class _AddHabitPageState extends State<AddHabitPage> {
     Icons.language,
   ];
 
-  void _saveHabit() async {
+  Future<bool> _saveHabit() async {
     if (_formKey.currentState!.validate()) {
       final habit = Habit(
         id: widget.habit?.id,
@@ -144,6 +145,7 @@ class _AddHabitPageState extends State<AddHabitPage> {
         streak: widget.habit?.streak ?? 0,
         medal: widget.habit?.medal ?? 'bronze',
         quantity: int.parse(_quantityController.text),
+        progress: widget.habit?.progress ?? 0,
         unit: _selectedUnit == 'Lainnya'
             ? _customUnitController.text
             : _selectedUnit ?? '',
@@ -161,10 +163,13 @@ class _AddHabitPageState extends State<AddHabitPage> {
           await DatabaseHelper.instance.updateHabit(habit);
           print("✅ Habit diupdate!");
         }
-        Navigator.pop(context);
+        return true;
       } catch (e) {
         print("❌ Gagal menyimpan: $e");
+        return false;
       }
+    } else {
+      return false;
     }
   }
 
@@ -501,7 +506,16 @@ class _AddHabitPageState extends State<AddHabitPage> {
                 height: 60,
               ),
               ElevatedButton(
-                onPressed: _saveHabit,
+                onPressed: () async {
+                  final success = await _saveHabit();
+                  if (success) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => HabitListPage()),
+                      (route) => false, // semua halaman sebelumnya dihapus
+                    );
+                  }
+                },
                 child: Text("Simpan Habit"),
               ),
             ],

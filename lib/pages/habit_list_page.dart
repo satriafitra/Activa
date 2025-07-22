@@ -77,6 +77,12 @@ class _HabitListPageState extends State<HabitListPage> {
     );
   }
 
+  // reset undo
+  Future<void> _resetHabitProgress(Habit habit) async {
+    habit.progress = 0;
+    await DatabaseHelper.instance.updateHabit(habit);
+  }
+
   // habit complete
   Future<void> _completeHabit(Habit habit) async {
     final db = await DatabaseHelper.instance.database;
@@ -406,11 +412,10 @@ class _HabitListPageState extends State<HabitListPage> {
               children: isCompleted
                   ? [
                       SlidableAction(
-                        onPressed: (_) {
-                          setState(() {
-                            habit.progress = 0;
-                          });
-                          _incrementHabitProgress(habit);
+                        onPressed: (_) async {
+                          await _resetHabitProgress(
+                              habit); // Set progress ke 0 dan simpan
+                          setState(() {});
                         },
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,

@@ -18,7 +18,7 @@ class DatabaseHelper {
 
 
   // UPGRADE PROGRESS
-  
+
     Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
       if (oldVersion < 2) {
         await db.execute(
@@ -46,6 +46,7 @@ class DatabaseHelper {
       streak INTEGER DEFAULT 0,
       medal TEXT DEFAULT 'bronze',
       quantity INTEGER DEFAULT 1,        -- kuantitas default 1
+      progress INTEGER DEFAULT 0,
       unit TEXT DEFAULT 'kali',          -- satuan default 'kali'
       has_reminder INTEGER,
       reminder_time TEXT
@@ -86,4 +87,21 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
+
+  // nagmbil id by id hehe
+  Future<Habit?> getHabitById(int id) async {
+  final db = await database;
+  final maps = await db.query(
+    'habits',
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
+  if (maps.isNotEmpty) {
+    return Habit.fromMap(maps.first);
+  } else {
+    return null;
+  }
+}
+
 }

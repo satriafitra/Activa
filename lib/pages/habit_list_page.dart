@@ -116,6 +116,10 @@ class _HabitListPageState extends State<HabitListPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Hitung total dan completed dari _habits
+    final totalTasks = _habits.length;
+    final completedTasks =
+        _habits.where((habit) => habit.progress >= habit.quantity).length;
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: Stack(children: [
@@ -255,8 +259,9 @@ class _HabitListPageState extends State<HabitListPage> {
                                 fontSize: 12,
                               ),
                             ),
+                            SizedBox(height: 4),
                             Text(
-                              "1/4",
+                              "$completedTasks/$totalTasks",
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 20,
@@ -351,6 +356,7 @@ class _HabitListPageState extends State<HabitListPage> {
   }
 
   Widget _buildHabitCard(Habit habit, {bool showLine = true}) {
+    final isCompleted = habit.progress >= habit.quantity;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -393,76 +399,26 @@ class _HabitListPageState extends State<HabitListPage> {
         const SizedBox(width: 12),
 
         Expanded(
-          child: habit.progress >= habit.quantity
-              ? InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => HabitDetailPage(habit: habit),
+          child: Slidable(
+            key: ValueKey(habit.id),
+            endActionPane: ActionPane(
+              motion: isCompleted ? const BehindMotion() : const DrawerMotion(),
+              children: isCompleted
+                  ? [
+                      SlidableAction(
+                        onPressed: (_) {
+                          setState(() {
+                            habit.progress = 0;
+                          });
+                          _incrementHabitProgress(habit);
+                        },
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        icon: Icons.undo,
+                        label: 'Undo',
                       ),
-                    );
-                  },
-                  borderRadius:
-                      BorderRadius.circular(16), // Biar efek ripple pas
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade400,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            IconData(int.parse(habit.icon),
-                                fontFamily: 'MaterialIcons'),
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                habit.name,
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                  decoration: TextDecoration.lineThrough,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                "${habit.progress}/${habit.quantity} ${habit.unit}",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : Slidable(
-                  key: ValueKey(habit.id),
-                  endActionPane: ActionPane(
-                    motion: const DrawerMotion(),
-                    children: [
+                    ]
+                  : [
                       SlidableAction(
                         onPressed: (_) async {
                           await _incrementHabitProgress(habit);
@@ -485,73 +441,94 @@ class _HabitListPageState extends State<HabitListPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ],
+            ),
+            child: InkWell(
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HabitDetailPage(habit: habit),
                   ),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => HabitDetailPage(habit: habit),
-                        ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
+                );
+
+                if (result == true) {
+                  _loadHabits(); // <-- ini akan refresh list habit kalau ada perubahan
+                }
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 600),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                decoration: BoxDecoration(
+                  color: isCompleted ? Colors.grey.shade200 : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: isCompleted
+                      ? []
+                      : [
                           BoxShadow(
                             color: const Color.fromARGB(20, 0, 0, 0),
                             blurRadius: 19,
-                          )
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Color(int.parse(habit.color))
-                                  .withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              IconData(int.parse(habit.icon),
-                                  fontFamily: 'MaterialIcons'),
-                              color: Color(int.parse(habit.color)),
-                            ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(habit.name,
-                                    style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14)),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "${habit.progress}/${habit.quantity} ${habit.unit}",
-                                  style: GoogleFonts.poppins(
-                                    color: Color(int.parse(habit.color)),
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
+                        ],
+                ),
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 600),
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isCompleted
+                            ? Colors.grey.shade400
+                            : Color(int.parse(habit.color)).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        IconData(int.parse(habit.icon),
+                            fontFamily: 'MaterialIcons'),
+                        color: isCompleted
+                            ? Colors.white
+                            : Color(int.parse(habit.color)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 600),
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: isCompleted ? Colors.grey : Colors.black,
+                              decoration: isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                            ),
+                            child: Text(habit.name),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            "${habit.progress}/${habit.quantity} ${habit.unit}",
+                            style: GoogleFonts.poppins(
+                              color: isCompleted
+                                  ? Colors.grey
+                                  : Color(int.parse(habit.color)),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
+              ),
+            ),
+          ),
         )
       ],
     );

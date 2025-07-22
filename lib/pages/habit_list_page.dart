@@ -6,6 +6,8 @@ import 'package:active/db/database_helper.dart';
 import 'package:active/models/habit.dart';
 import 'package:active/pages/add_habit_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:lottie/lottie.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class HabitListPage extends StatefulWidget {
   @override
@@ -14,6 +16,58 @@ class HabitListPage extends StatefulWidget {
 
 class _HabitListPageState extends State<HabitListPage> {
   List<Habit> _habits = [];
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  bool _isConfettiActive = false; // Untuk munculin widget
+  bool _isConfettiVisible = false; // Untuk mengatur opacity/slide
+
+  final Duration _animationDuration = Duration(milliseconds: 500);
+
+  // ✅ Letakkan di sini
+  bool _allHabitsCompleted(List<Habit> habits) {
+    return habits.every((habit) => habit.progress >= habit.quantity);
+  }
+
+  // tampilkan overlay confetti
+  bool _showConfetti = false;
+
+  void _checkAllHabitsCompleted() {
+    if (_allHabitsCompleted(_habits) && !_isConfettiActive) {
+      setState(() {
+        _isConfettiActive = true;
+      });
+
+      _audioPlayer.play(AssetSource('sounds/success.wav'));
+
+
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (mounted) {
+          setState(() {
+            _isConfettiVisible = true;
+          });
+        }
+      });
+
+      // Delay untuk menutup animasi
+      Future.delayed(Duration(seconds: 4), () {
+        if (mounted) {
+          setState(() {
+            _isConfettiVisible = false;
+          });
+
+          // Hapus dari tree setelah animasi fade-out selesai
+          Future.delayed(_animationDuration, () {
+            if (mounted) {
+              setState(() {
+                _isConfettiActive = false;
+              });
+            }
+          });
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -26,6 +80,8 @@ class _HabitListPageState extends State<HabitListPage> {
     setState(() {
       _habits = habits;
     });
+
+    _checkAllHabitsCompleted();
   }
 
   bool _isSidebarOpen = false;
@@ -342,6 +398,82 @@ class _HabitListPageState extends State<HabitListPage> {
           onClose: _toggleSidebar,
           selectedItem: 'Today',
         ),
+
+        if (_isConfettiActive)
+          Positioned.fill(
+            child: AnimatedOpacity(
+              duration: _animationDuration,
+              opacity: _isConfettiVisible ? 1.0 : 0.0,
+              child: Container(
+                color: Colors.black.withOpacity(0.7),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    AnimatedSlide(
+                      duration: _animationDuration,
+                      offset: _isConfettiVisible
+                          ? Offset.zero
+                          : const Offset(0, 0),
+                      child: Transform.translate(
+                        offset:
+                            Offset(-100, 0), // (X, Y): kanan 20px, atas 50px
+                        child: SizedBox(
+                          child: Lottie.asset(
+                            'assets/animations/confetti.json',
+                            repeat: false,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: AnimatedSlide(
+                        duration: _animationDuration,
+                        offset: _isConfettiVisible
+                            ? Offset.zero
+                            : const Offset(0, 0.2),
+                        child: AnimatedOpacity(
+                          duration: _animationDuration,
+                          opacity: _isConfettiVisible ? 1.0 : 0.0,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "Great Job!",
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black45,
+                                      offset: Offset(2, 3),
+                                      blurRadius: 6,
+                                    )
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                "You're good today!",
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
       ]),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {

@@ -41,6 +41,63 @@ class _HabitListPageState extends State<HabitListPage> {
     _loadHabits();
   }
 
+  String _getMedalFromStreak(int streak) {
+    if (streak >= 7) return 'gold';
+    if (streak >= 4) return 'silver';
+    return 'bronze';
+  }
+
+  // fungsi menyelesaikan habit
+  Future<void> _incrementHabitProgress(Habit habit) async {
+    final db = await DatabaseHelper.instance.database;
+
+    // Cek apakah habit sudah selesai
+    if (habit.progress >= habit.quantity) return;
+
+    final newProgress = habit.progress + 1;
+
+    int newStreak = habit.streak;
+    String newMedal = habit.medal;
+
+    // Kalau progress sudah mencapai target
+    if (newProgress >= habit.quantity) {
+      newStreak += 1;
+      newMedal = _getMedalFromStreak(newStreak);
+    }
+
+    await db.update(
+      'habits',
+      {
+        'progress': newProgress,
+        'streak': newStreak,
+        'medal': newMedal,
+      },
+      where: 'id = ?',
+      whereArgs: [habit.id],
+    );
+  }
+
+  // habit complete
+  Future<void> _completeHabit(Habit habit) async {
+    final db = await DatabaseHelper.instance.database;
+
+    // Kalau sudah selesai, gak usah update lagi
+    if (habit.progress >= habit.quantity) return;
+
+    final newStreak = habit.streak + 1;
+
+    await db.update(
+      'habits',
+      {
+        'progress': habit.quantity, // langsung penuh
+        'streak': newStreak,
+        // medal bisa di-skip dulu ya karena belum dipakai
+      },
+      where: 'id = ?',
+      whereArgs: [habit.id],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -301,17 +358,21 @@ class _HabitListPageState extends State<HabitListPage> {
               height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.green,
+                color: habit.progress >= habit.quantity
+                    ? Colors.green
+                    : Colors.white,
                 border: Border.all(
                   color: Colors.green,
                   width: 2,
                 ),
               ),
-              child: Icon(
-                Icons.check,
-                size: 16,
-                color: Colors.white,
-              ),
+              child: habit.progress >= habit.quantity
+                  ? Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
             ),
             if (habit.name != "Read book")
               Container(
@@ -333,28 +394,27 @@ class _HabitListPageState extends State<HabitListPage> {
               children: [
                 SlidableAction(
                   onPressed: (_) async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AddHabitPage(habit: habit),
-                      ),
-                    );
-                    _loadHabits();
+                    await _incrementHabitProgress(habit);
+                    _loadHabits(); // refresh list
                   },
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
-                  icon: Icons.edit,
+                  label: '+1', // bisa juga dihapus kalau gak mau label
                   borderRadius: BorderRadius.circular(12),
                   flex: 1,
                   spacing: 1,
                 ),
                 SlidableAction(
-                  onPressed: (_) => _deleteHabit(habit.id!),
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white, // warna icon + text
-                  icon: Icons.delete,
+                  onPressed: (_) async {
+                    await _completeHabit(habit);
+                    _loadHabits(); // refresh tampilan
+                  },
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  icon: Icons.done_all, // ikon selesai semua
+                  label: 'Selesai',
                   borderRadius: BorderRadius.circular(12),
-                )
+                ),
               ],
             ),
             child: InkWell(
@@ -407,11 +467,12 @@ class _HabitListPageState extends State<HabitListPage> {
                                   fontWeight: FontWeight.w600, fontSize: 14)),
                           const SizedBox(height: 2),
                           Text(
-                            "${habit.quantity} ${habit.unit}",
+                            "${habit.progress}/${habit.quantity} ${habit.unit}",
                             style: GoogleFonts.poppins(
-                                color: Color(int.parse(habit.color)),
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12),
+                              color: Color(int.parse(habit.color)),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),

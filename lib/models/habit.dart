@@ -8,6 +8,7 @@ class Habit {
   int streak;
   String medal;
   int quantity;
+  int progress;
   String unit;
   String? reminderTime; // format: "HH:mm"
   bool hasReminder;
@@ -22,6 +23,7 @@ class Habit {
     this.streak = 0,
     this.medal = 'bronze',
     this.quantity = 1,
+    this.progress = 0,
     this.unit = 'kali',
     this.reminderTime,
     this.hasReminder = false,
@@ -38,6 +40,7 @@ class Habit {
       streak: map['streak'],
       medal: map['medal'],
       quantity: map['quantity'],
+      progress: map['progress'],
       unit: map['unit'],
       hasReminder: map['has_reminder'] == 1,
       reminderTime: map['reminder_time'],
@@ -55,6 +58,7 @@ class Habit {
       'streak': streak,
       'medal': medal,
       'quantity': quantity,
+      'progress': progress,
       'unit': unit,
       'has_reminder': hasReminder ? 1 : 0,
       'reminder_time': reminderTime,

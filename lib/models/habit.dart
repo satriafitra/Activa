@@ -1,4 +1,12 @@
 class Habit {
+  List<String> get dayList {
+    return days.split(',').map((e) => e.trim()).toList();
+  }
+
+  set dayList(List<String> newDays) {
+    days = newDays.join(',');
+  }
+
   int? id;
   String name;
   String icon;

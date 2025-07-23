@@ -155,6 +155,9 @@ class _AddHabitPageState extends State<AddHabitPage> {
             : null,
       );
 
+      // 🔍 Tambahkan print ini untuk debug:
+      print("📅 Selected days saat simpan: ${_selectedDays.join(',')}");
+
       try {
         if (widget.habit == null) {
           await DatabaseHelper.instance.insertHabit(habit);

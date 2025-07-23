@@ -8,6 +8,7 @@ import 'package:active/pages/add_habit_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lottie/lottie.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:intl/intl.dart';
 
 class HabitListPage extends StatefulWidget {
   @override
@@ -15,7 +16,53 @@ class HabitListPage extends StatefulWidget {
 }
 
 class _HabitListPageState extends State<HabitListPage> {
+  late DatabaseHelper dbHelper;
+
   List<Habit> _habits = [];
+
+  // initiate
+
+  void _loadHabitsForDate(DateTime date) async {
+    final allHabits = await dbHelper.getHabits(); // ambil semua habit
+    final selectedDay =
+        DateFormat('EEEE', 'id_ID').format(date); // Contoh: 'Senin'
+
+    print('📆 Hari yang difilter: $selectedDay');
+
+    final filtered = allHabits.where((habit) {
+      final days = habit.days.split(','); // Misal: ['Senin', 'Selasa']
+      return days.contains(selectedDay); // Langsung dibandingkan
+    }).toList();
+
+    setState(() {
+      _habits = filtered;
+    });
+  }
+
+  DateTime selectedDate = DateTime.now();
+
+  late final String _dayName;
+
+  String _getDayName(int weekday) {
+    switch (weekday) {
+      case 1:
+        return 'Senin';
+      case 2:
+        return 'Selasa';
+      case 3:
+        return 'Rabu';
+      case 4:
+        return 'Kamis';
+      case 5:
+        return 'Jumat';
+      case 6:
+        return 'Sabtu';
+      case 7:
+        return 'Minggu';
+      default:
+        return '';
+    }
+  }
 
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -40,7 +87,6 @@ class _HabitListPageState extends State<HabitListPage> {
 
       _audioPlayer.play(AssetSource('sounds/success.wav'));
 
-
       Future.delayed(Duration(milliseconds: 100), () {
         if (mounted) {
           setState(() {
@@ -50,7 +96,7 @@ class _HabitListPageState extends State<HabitListPage> {
       });
 
       // Delay untuk menutup animasi
-      Future.delayed(Duration(seconds: 4), () {
+      Future.delayed(Duration(seconds: 3), () {
         if (mounted) {
           setState(() {
             _isConfettiVisible = false;
@@ -72,13 +118,26 @@ class _HabitListPageState extends State<HabitListPage> {
   @override
   void initState() {
     super.initState();
-    _loadHabits();
+    dbHelper = DatabaseHelper.instance; // ✅
+    // ✅ inisialisasi dbHelper
+
+    selectedDate = DateTime.now(); // ✅ penting untuk awal tampilan
+    _dayName = _getDayName(selectedDate.weekday);
+
+    _loadHabitsForDate(selectedDate); // ✅ load habit berdasarkan tanggal awal
   }
 
   Future<void> _loadHabits() async {
-    final habits = await DatabaseHelper.instance.getHabits();
+    final allHabits = await DatabaseHelper.instance.getHabits();
+
+    final today = _getDayName(DateTime.now().weekday);
+
+    final todaysHabits = allHabits.where((habit) {
+      return habit.days.contains(today);
+    }).toList();
+
     setState(() {
-      _habits = habits;
+      _habits = todaysHabits;
     });
 
     _checkAllHabitsCompleted();
@@ -92,17 +151,6 @@ class _HabitListPageState extends State<HabitListPage> {
     });
   }
 
-  void _deleteHabit(int id) async {
-    await DatabaseHelper.instance.deleteHabit(id);
-    _loadHabits();
-  }
-
-  String _getMedalFromStreak(int streak) {
-    if (streak >= 7) return 'gold';
-    if (streak >= 4) return 'silver';
-    return 'bronze';
-  }
-
   // fungsi menyelesaikan habit
   Future<void> _incrementHabitProgress(Habit habit) async {
     final db = await DatabaseHelper.instance.database;
@@ -114,12 +162,6 @@ class _HabitListPageState extends State<HabitListPage> {
 
     int newStreak = habit.streak;
     String newMedal = habit.medal;
-
-    // Kalau progress sudah mencapai target
-    if (newProgress >= habit.quantity) {
-      newStreak += 1;
-      newMedal = _getMedalFromStreak(newStreak);
-    }
 
     await db.update(
       'habits',
@@ -200,9 +242,13 @@ class _HabitListPageState extends State<HabitListPage> {
                           color: const Color.fromARGB(255, 0, 0, 0)),
                     ),
                     const SizedBox(width: 12),
-                    Text("Today",
-                        style: GoogleFonts.poppins(
-                            fontSize: 22, fontWeight: FontWeight.w600)),
+                    Text(
+                      DateFormat('EEEE, d MMMM', 'id_ID').format(selectedDate),
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     Spacer(),
                     Icon(Icons.emoji_events_outlined, color: Colors.brown),
                     const SizedBox(width: 12),
@@ -237,18 +283,29 @@ class _HabitListPageState extends State<HabitListPage> {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: ['M', 'S', 'S', 'R', 'K', 'J', 'S']
+                  children: ['S', 'S', 'R', 'K', 'J', 'S', 'M']
                       .map((day) => Text(day, style: GoogleFonts.poppins()))
                       .toList(),
                 ),
               ),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(7, (i) {
-                  final isSelected = i == 1;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 0), // Atur jarak antar item di sini
+                  final date = DateTime.now()
+                      .subtract(Duration(days: DateTime.now().weekday - 1 - i));
+                  final isSelected = date.day == selectedDate.day &&
+                      date.month == selectedDate.month &&
+                      date.year == selectedDate.year;
+
+                  return GestureDetector(
+                    onTap: () {
+                      print('🗓️ Tanggal diklik: $date');
+                      setState(() {
+                        selectedDate = date;
+                        _loadHabitsForDate(selectedDate);
+                      });
+                    },
                     child: Column(
                       children: [
                         const SizedBox(height: 4),
@@ -262,7 +319,7 @@ class _HabitListPageState extends State<HabitListPage> {
                           ),
                           child: Center(
                             child: Text(
-                              (i + 1).toString().padLeft(2, '0'),
+                              date.day.toString().padLeft(2, '0'),
                               style: GoogleFonts.poppins(
                                 color: isSelected ? Colors.white : Colors.black,
                                 fontWeight: FontWeight.w600,
@@ -411,9 +468,8 @@ class _HabitListPageState extends State<HabitListPage> {
                   children: [
                     AnimatedSlide(
                       duration: _animationDuration,
-                      offset: _isConfettiVisible
-                          ? Offset.zero
-                          : const Offset(0, 0),
+                      offset:
+                          _isConfettiVisible ? Offset.zero : const Offset(0, 0),
                       child: Transform.translate(
                         offset:
                             Offset(-100, 0), // (X, Y): kanan 20px, atas 50px
@@ -481,7 +537,7 @@ class _HabitListPageState extends State<HabitListPage> {
             context,
             MaterialPageRoute(builder: (_) => AddHabitPage()),
           );
-          _loadHabits();
+          _loadHabitsForDate(selectedDate);
         },
         backgroundColor: const Color.fromARGB(
             255, 0, 97, 52), // Ganti warna sesuai keinginan

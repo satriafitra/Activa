@@ -40,5 +40,6 @@ flutter:
     - assets/images/sidebar_banner.png
     - assets/animations/confetti.json
     - assets/sounds/success.wav
+    - assets/sounds/success.mp3
 
   

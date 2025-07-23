@@ -23,6 +23,9 @@ class _HabitListPageState extends State<HabitListPage> {
 
   // initiate
 
+  bool _wasAllCompleted = false;
+  bool _shouldCheckConfetti = false;
+
   List<HabitWithStatus> habitsWithStatus = [];
 
   void _loadHabitsForDate(DateTime date) async {
@@ -113,42 +116,46 @@ class _HabitListPageState extends State<HabitListPage> {
   bool _showConfetti = false;
 
   void _checkAllHabitsCompleted() {
-    // Cek semua habit selesai berdasarkan isCompleted milik HabitWithStatus
     final allCompleted = habitsWithStatus.isNotEmpty &&
         habitsWithStatus.every((habit) => habit.isCompleted == true);
 
-    if (allCompleted && !_isConfettiActive) {
-      setState(() {
-        _isConfettiActive = true;
-      });
+    if (allCompleted && !_wasAllCompleted && _shouldCheckConfetti) {
+      _wasAllCompleted = true;
+      _shouldCheckConfetti = false; // hanya trigger sekali
 
-      _audioPlayer.play(AssetSource('sounds/success.wav'));
+      if (!_isConfettiActive) {
+        setState(() {
+          _isConfettiActive = true;
+        });
 
-      Future.delayed(Duration(milliseconds: 100), () {
-        if (mounted) {
-          setState(() {
-            _isConfettiVisible = true;
-          });
-        }
-      });
+        _audioPlayer.play(AssetSource('sounds/success.wav'));
 
-      // Delay untuk menutup animasi
-      Future.delayed(Duration(seconds: 3), () {
-        if (mounted) {
-          setState(() {
-            _isConfettiVisible = false;
-          });
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (mounted) {
+            setState(() {
+              _isConfettiVisible = true;
+            });
+          }
+        });
 
-          // Hapus dari tree setelah animasi fade-out selesai
-          Future.delayed(_animationDuration, () {
-            if (mounted) {
-              setState(() {
-                _isConfettiActive = false;
-              });
-            }
-          });
-        }
-      });
+        Future.delayed(Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _isConfettiVisible = false;
+            });
+
+            Future.delayed(_animationDuration, () {
+              if (mounted) {
+                setState(() {
+                  _isConfettiActive = false;
+                });
+              }
+            });
+          }
+        });
+      }
+    } else if (!allCompleted) {
+      _wasAllCompleted = false;
     }
   }
 
@@ -664,6 +671,9 @@ class _HabitListPageState extends State<HabitListPage> {
                             habit.id!,
                             DateFormat('yyyy-MM-dd').format(selectedDate),
                           );
+
+                          // aktifkan pengecekan confetti
+                          _shouldCheckConfetti = true;
 
                           _loadHabitsForDate(selectedDate);
                         },

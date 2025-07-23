@@ -440,63 +440,62 @@ class _HabitListPageState extends State<HabitListPage> {
               const SizedBox(height: 16),
 
               // Image banner
-              Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Container(
-                  height: 140,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    image: DecorationImage(
-                      image: AssetImage(
-                          'assets/images/banner.png'), // Sesuaikan dengan path kamu
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Stack(
-                    children: [
-                      // Teks di kiri bawah
-                      Align(
-                        alignment: Alignment.bottomLeft,
-                        child: Text(
-                          "Keep it up!",
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+              isTodaySelected
+                  ? Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Container(
+                        height: 140,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          image: DecorationImage(
+                            image: AssetImage('assets/images/banner.png'),
+                            fit: BoxFit.cover,
                           ),
                         ),
-                      ),
-                      // Teks di kanan bawah
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                        padding: const EdgeInsets.all(16),
+                        child: Stack(
                           children: [
-                            Text(
-                              "TASK COMPLETE",
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 12,
+                            Align(
+                              alignment: Alignment.bottomLeft,
+                              child: Text(
+                                "Keep it up!",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              "$completedTasks/$totalTasks",
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                            Align(
+                              alignment: Alignment.bottomRight,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    "TASK COMPLETE",
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    "$completedTasks/$totalTasks",
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
+                    )
+                  : const SizedBox.shrink(),
 
               const SizedBox(height: 20),
               Padding(
@@ -515,7 +514,11 @@ class _HabitListPageState extends State<HabitListPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._buildHabitsByTime('pagi'),
+                      Column(
+                        key: ValueKey(
+                            'pagi-${selectedDate.toIso8601String()}'),
+                        children: _buildHabitsByTime('pagi'),
+                      ),
                       const SizedBox(height: 24),
                     ],
                     if (habitsWithStatus.any(
@@ -529,7 +532,11 @@ class _HabitListPageState extends State<HabitListPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._buildHabitsByTime('siang'),
+                      Column(
+                        key: ValueKey(
+                            'siang-${selectedDate.toIso8601String()}'),
+                        children: _buildHabitsByTime('siang'),
+                      ),
                       const SizedBox(height: 24),
                     ],
                     if (habitsWithStatus.any(
@@ -543,7 +550,11 @@ class _HabitListPageState extends State<HabitListPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._buildHabitsByTime('malam'),
+                      Column(
+                        key: ValueKey(
+                            'malam-${selectedDate.toIso8601String()}'),
+                        children: _buildHabitsByTime('malam'),
+                      ),
                     ],
                   ],
                 ),
@@ -720,7 +731,7 @@ class _HabitListPageState extends State<HabitListPage> {
                                 _shouldCheckConfetti =
                                     true; // <-- Tambahkan ini!
                               });
-                              
+
                               _loadHabitsForDate(selectedDate);
                             },
                             backgroundColor: Colors.green,

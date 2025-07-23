@@ -21,6 +21,13 @@ class _HabitListPageState extends State<HabitListPage> {
 
   Map<int, bool> _completedStatus = {};
 
+  bool get isTodaySelected {
+    final now = DateTime.now();
+    return selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+  }
+
   // initiate
 
   bool _wasAllCompleted = false;
@@ -116,12 +123,43 @@ class _HabitListPageState extends State<HabitListPage> {
   bool _showConfetti = false;
 
   void _checkAllHabitsCompleted() {
-    final allCompleted = habitsWithStatus.isNotEmpty &&
-        habitsWithStatus.every((habit) => habit.isCompleted == true);
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final selected = DateFormat('yyyy-MM-dd').format(selectedDate);
+
+    final isToday = today == selected;
+    print('📆 Mengecek confetti untuk: $selected (isToday: $isToday)');
+
+    if (!isToday) {
+      print('❌ Bukan hari ini, confetti tidak dicek.');
+      return;
+    }
+
+    // Ambil nama hari
+    final selectedDay = DateFormat('EEEE', 'id_ID').format(selectedDate);
+    print('📅 Nama hari saat ini: $selectedDay');
+
+    // Filter hanya habit yang aktif di hari ini
+    final todayHabits = habitsWithStatus.where((habit) {
+      final days = habit.habit.days.split(',');
+      return days.contains(selectedDay);
+    }).toList();
+
+    print('🟦 Jumlah habit aktif hari ini: ${todayHabits.length}');
+    print(
+        '✅ Jumlah habit yang selesai: ${todayHabits.where((h) => h.isCompleted).length}');
+
+    final allCompleted = todayHabits.isNotEmpty &&
+        todayHabits.every((habit) => habit.isCompleted == true);
+
+    print('✅ allCompleted: $allCompleted');
+    print('❓ _wasAllCompleted: $_wasAllCompleted');
+    print('❓ _shouldCheckConfetti: $_shouldCheckConfetti');
 
     if (allCompleted && !_wasAllCompleted && _shouldCheckConfetti) {
+      print('🎉 Semua habit selesai! Menjalankan confetti...');
+
       _wasAllCompleted = true;
-      _shouldCheckConfetti = false; // hanya trigger sekali
+      _shouldCheckConfetti = false;
 
       if (!_isConfettiActive) {
         setState(() {
@@ -149,13 +187,17 @@ class _HabitListPageState extends State<HabitListPage> {
                 setState(() {
                   _isConfettiActive = false;
                 });
+                print('🎊 Confetti selesai.');
               }
             });
           }
         });
       }
-    } else if (!allCompleted) {
-      _wasAllCompleted = false;
+    } else {
+      if (!allCompleted) {
+        print('⏳ Belum semua habit selesai.');
+        _wasAllCompleted = false;
+      }
     }
   }
 
@@ -612,6 +654,7 @@ class _HabitListPageState extends State<HabitListPage> {
 
   Widget _buildHabitCard(Habit habit, bool isCompleted,
       {bool showLine = true}) {
+    final isInactiveDay = !isTodaySelected;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -648,125 +691,145 @@ class _HabitListPageState extends State<HabitListPage> {
             key: ValueKey(habit.id),
             endActionPane: ActionPane(
               motion: isCompleted ? const BehindMotion() : const DrawerMotion(),
-              children: isCompleted
-                  ? [
-                      SlidableAction(
-                        onPressed: (_) async {
-                          await dbHelper.unmarkHabitAsCompleted(
-                            habit.id!,
-                            DateFormat('yyyy-MM-dd').format(selectedDate),
-                          );
-                          _loadHabitsForDate(selectedDate);
-                        },
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        icon: Icons.undo,
-                        label: 'Undo',
-                      ),
-                    ]
-                  : [
-                      SlidableAction(
-                        onPressed: (_) async {
-                          await dbHelper.markHabitAsCompleted(
-                            habit.id!,
-                            DateFormat('yyyy-MM-dd').format(selectedDate),
-                          );
+              children: isTodaySelected
+                  ? isCompleted
+                      ? [
+                          SlidableAction(
+                            onPressed: (_) async {
+                              await dbHelper.unmarkHabitAsCompleted(
+                                habit.id!,
+                                DateFormat('yyyy-MM-dd').format(selectedDate),
+                              );
+                              _loadHabitsForDate(selectedDate);
+                            },
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            icon: Icons.undo,
+                            label: 'Undo',
+                          ),
+                        ]
+                      : [
+                          SlidableAction(
+                            onPressed: (_) async {
+                              await dbHelper.markHabitAsCompleted(
+                                habit.id!,
+                                DateFormat('yyyy-MM-dd').format(selectedDate),
+                              );
 
-                          // aktifkan pengecekan confetti
-                          _shouldCheckConfetti = true;
-
-                          _loadHabitsForDate(selectedDate);
-                        },
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        icon: Icons.check,
-                        label: 'Selesai',
-                      ),
-                    ],
+                              setState(() {
+                                _shouldCheckConfetti =
+                                    true; // <-- Tambahkan ini!
+                              });
+                              
+                              _loadHabitsForDate(selectedDate);
+                            },
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            icon: Icons.check,
+                            label: 'Selesai',
+                          ),
+                        ]
+                  : [], // Tidak bisa menyelesaikan habit di hari lain
             ),
             child: InkWell(
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => HabitDetailPage(habit: habit),
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => HabitDetailPage(habit: habit),
+                    ),
+                  );
+                  if (result == true) _loadHabitsForDate(selectedDate);
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 600),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: isInactiveDay
+                        ? Colors.grey.shade200 // warna card nonaktif
+                        : (isCompleted ? Colors.grey.shade200 : Colors.white),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: isInactiveDay || isCompleted
+                        ? [] // tanpa shadow jika nonaktif atau sudah selesai
+                        : [
+                            BoxShadow(
+                              color: const Color.fromARGB(20, 0, 0, 0),
+                              blurRadius: 19,
+                            ),
+                          ],
                   ),
-                );
-                if (result == true) _loadHabitsForDate(selectedDate);
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 600),
-                margin: const EdgeInsets.only(bottom: 12),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                decoration: BoxDecoration(
-                  color: isCompleted ? Colors.grey.shade200 : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: isCompleted
-                      ? []
-                      : [
-                          BoxShadow(
-                            color: const Color.fromARGB(20, 0, 0, 0),
-                            blurRadius: 19,
-                          ),
-                        ],
-                ),
-                child: Row(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 600),
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: isCompleted
-                            ? Colors.grey.shade400
-                            : Color(int.parse(habit.color)).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    children: [
+                      // Icon box
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 600),
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: isInactiveDay
+                              ? Colors.grey.shade300
+                              : (isCompleted
+                                  ? Colors.grey.shade400
+                                  : Color(int.parse(habit.color))
+                                      .withOpacity(0.2)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          IconData(int.parse(habit.icon),
+                              fontFamily: 'MaterialIcons'),
+                          color: isInactiveDay
+                              ? Colors.grey
+                              : (isCompleted
+                                  ? Colors.white
+                                  : Color(int.parse(habit.color))),
+                        ),
                       ),
-                      child: Icon(
-                        IconData(int.parse(habit.icon),
-                            fontFamily: 'MaterialIcons'),
-                        color: isCompleted
-                            ? Colors.white
-                            : Color(int.parse(habit.color)),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 600),
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: isCompleted ? Colors.grey : Colors.black,
-                              decoration: isCompleted
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
+                      const SizedBox(width: 16),
+                      // Text info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 600),
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: isInactiveDay
+                                    ? Colors.grey
+                                    : (isCompleted
+                                        ? Colors.grey
+                                        : Colors.black),
+                                decoration: isCompleted && !isInactiveDay
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                              ),
+                              child: Text(habit.name),
                             ),
-                            child: Text(habit.name),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            "${habit.progress}/${habit.quantity} ${habit.unit}",
-                            style: GoogleFonts.poppins(
-                              color: isCompleted
-                                  ? Colors.grey
-                                  : Color(int.parse(habit.color)),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                            const SizedBox(height: 2),
+                            Text(
+                              isInactiveDay
+                                  ? "${habit.quantity} ${habit.unit}"
+                                  : "${habit.progress}/${habit.quantity} ${habit.unit}",
+                              style: GoogleFonts.poppins(
+                                color: isInactiveDay
+                                    ? Colors.grey
+                                    : (isCompleted
+                                        ? Colors.grey
+                                        : Color(int.parse(habit.color))),
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                    ],
+                  ),
+                )),
           ),
         ),
       ],

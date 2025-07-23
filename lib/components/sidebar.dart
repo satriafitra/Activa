@@ -39,7 +39,7 @@ class SidebarOverlay extends StatelessWidget {
                   // Banner gambar
                   Container(
                     width: double.infinity,
-                    height: 160,
+                    height: 170,
                     decoration: const BoxDecoration(
                       image: DecorationImage(
                         image: AssetImage('assets/images/sidebar_banner.png'), // ganti sesuai filemu

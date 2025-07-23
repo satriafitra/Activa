@@ -25,6 +25,7 @@ dependencies:
   table_calendar: ^3.0.9
   lottie: ^2.7.0
   audioplayers: ^5.2.1
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -39,7 +40,9 @@ flutter:
     - assets/images/banner.png
     - assets/images/sidebar_banner.png
     - assets/animations/confetti.json
+    - assets/animations/Chatbot.json
     - assets/sounds/success.wav
     - assets/sounds/success.mp3
+    - .env
 
   

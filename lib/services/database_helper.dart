@@ -127,11 +127,16 @@ class DatabaseHelper {
   }
 
 // ✅ Tandai habit selesai di tanggal tertentu
-  Future<void> markHabitAsCompleted(int habitId, String date,
-      {int quantity = 1}) async {
+  Future<void> markHabitAsCompleted(int habitId, String date) async {
     final db = await database;
 
-    // Simpan log penyelesaian
+    // Ambil habit dari database untuk dapatkan quantity
+    final habit = await getHabitById(habitId);
+    if (habit == null) return;
+
+    final int quantity = habit.quantity;
+
+    // Simpan ke habit_logs
     await db.insert(
       'habit_logs',
       {
@@ -142,7 +147,7 @@ class DatabaseHelper {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    // ✅ Tambahkan ke progress di tabel habits
+    // Update progress += quantity
     await db.rawUpdate(
       '''
     UPDATE habits
@@ -168,10 +173,28 @@ class DatabaseHelper {
 
   Future<void> unmarkHabitAsCompleted(int habitId, String date) async {
     final db = await database;
+
+    // Ambil quantity dari habit
+    final habit = await getHabitById(habitId);
+    if (habit == null) return;
+
+    final int quantity = habit.quantity;
+
+    // Hapus dari habit_logs
     await db.delete(
-      'habit_logs', // ganti dari 'habit_completions'
+      'habit_logs',
       where: 'habit_id = ? AND date = ?',
       whereArgs: [habitId, date],
+    );
+
+    // Kurangi progress di habits
+    await db.rawUpdate(
+      '''
+    UPDATE habits
+    SET progress = MAX(progress - ?, 0) -- supaya ga minus
+    WHERE id = ?
+    ''',
+      [quantity, habitId],
     );
   }
 }

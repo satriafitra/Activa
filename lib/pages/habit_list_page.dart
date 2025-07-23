@@ -26,20 +26,18 @@ class _HabitListPageState extends State<HabitListPage> {
   List<HabitWithStatus> habitsWithStatus = [];
 
   void _loadHabitsForDate(DateTime date) async {
-    final allHabits = await dbHelper.getHabits(); // ambil semua habit
+    final allHabits = await dbHelper.getHabits();
     final selectedDay = DateFormat('EEEE', 'id_ID').format(date);
 
     print('📆 Hari yang difilter: $selectedDay');
 
-    // Filter habit yang aktif di hari itu
     final filtered = allHabits.where((habit) {
-      final days = habit.days.split(','); // Misal: ['Senin', 'Selasa']
+      final days = habit.days.split(',');
       return days.contains(selectedDay);
     }).toList();
 
     print('🎯 Habit yang cocok di hari ini: ${filtered.length}');
 
-    // Cek status selesai masing-masing habit
     final habitStatuses = await Future.wait(filtered.map((habit) async {
       final isCompleted =
           await dbHelper.isHabitCompletedOnDate(habit.id!, date);
@@ -51,8 +49,27 @@ class _HabitListPageState extends State<HabitListPage> {
       habitsWithStatus = habitStatuses;
     });
 
-    print(
-        '✅ Total HabitWithStatus yang ditampilkan: ${habitsWithStatus.length}');
+    // ✅ Panggil setelah setState
+    _checkAllHabitsCompleted();
+  }
+
+  void _triggerConfetti() {
+    setState(() {
+      _isConfettiActive = true;
+      _isConfettiVisible = true;
+    });
+
+    // otomatis hilang setelah beberapa detik
+    Future.delayed(Duration(seconds: 3), () {
+      setState(() {
+        _isConfettiVisible = false;
+      });
+      Future.delayed(Duration(milliseconds: 500), () {
+        setState(() {
+          _isConfettiActive = false;
+        });
+      });
+    });
   }
 
   DateTime selectedDate = DateTime.now();
@@ -509,7 +526,7 @@ class _HabitListPageState extends State<HabitListPage> {
                           _isConfettiVisible ? Offset.zero : const Offset(0, 0),
                       child: Transform.translate(
                         offset:
-                            Offset(-100, 0), // (X, Y): kanan 20px, atas 50px
+                            Offset(-115, 0), // (X, Y): kanan 20px, atas 50px
                         child: SizedBox(
                           child: Lottie.asset(
                             'assets/animations/confetti.json',
@@ -549,7 +566,7 @@ class _HabitListPageState extends State<HabitListPage> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                "You're good today!",
+                                "You're completed all\ntasks today!",
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.poppins(
                                   fontSize: 20,
@@ -647,6 +664,7 @@ class _HabitListPageState extends State<HabitListPage> {
                             habit.id!,
                             DateFormat('yyyy-MM-dd').format(selectedDate),
                           );
+
                           _loadHabitsForDate(selectedDate);
                         },
                         backgroundColor: Colors.green,

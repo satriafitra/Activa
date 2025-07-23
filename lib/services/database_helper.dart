@@ -16,8 +16,7 @@ class DatabaseHelper {
     Directory documentsDir = await getApplicationDocumentsDirectory();
     String path = join(documentsDir.path, 'activa.db');
 
-
-  // UPGRADE PROGRESS
+    // UPGRADE PROGRESS
 
     Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
       if (oldVersion < 2) {
@@ -50,6 +49,18 @@ class DatabaseHelper {
       unit TEXT DEFAULT 'kali',          -- satuan default 'kali'
       has_reminder INTEGER,
       reminder_time TEXT
+    )
+
+    
+  ''');
+
+    await db.execute('''
+    CREATE TABLE habit_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      habit_id INTEGER,
+      date TEXT,
+      quantity_completed INTEGER DEFAULT 1,
+      FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
     )
   ''');
   }
@@ -90,18 +101,77 @@ class DatabaseHelper {
 
   // nagmbil id by id hehe
   Future<Habit?> getHabitById(int id) async {
-  final db = await database;
-  final maps = await db.query(
-    'habits',
-    where: 'id = ?',
-    whereArgs: [id],
-  );
+    final db = await database;
+    final maps = await db.query(
+      'habits',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
 
-  if (maps.isNotEmpty) {
-    return Habit.fromMap(maps.first);
-  } else {
-    return null;
+    if (maps.isNotEmpty) {
+      return Habit.fromMap(maps.first);
+    } else {
+      return null;
+    }
   }
-}
 
+  // ✅ Cek apakah habit sudah selesai di tanggal tertentu
+  Future<bool> isHabitCompleted(int habitId, String date) async {
+    final db = await database;
+    final result = await db.query(
+      'habit_logs',
+      where: 'habit_id = ? AND date = ?',
+      whereArgs: [habitId, date],
+    );
+    return result.isNotEmpty;
+  }
+
+// ✅ Tandai habit selesai di tanggal tertentu
+  Future<void> markHabitAsCompleted(int habitId, String date,
+      {int quantity = 1}) async {
+    final db = await database;
+
+    // Simpan log penyelesaian
+    await db.insert(
+      'habit_logs',
+      {
+        'habit_id': habitId,
+        'date': date,
+        'quantity_completed': quantity,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    // ✅ Tambahkan ke progress di tabel habits
+    await db.rawUpdate(
+      '''
+    UPDATE habits
+    SET progress = progress + ?
+    WHERE id = ?
+    ''',
+      [quantity, habitId],
+    );
+  }
+
+  // ✅ Cek apakah habit selesai di tanggal tertentu (dengan parameter DateTime)
+  Future<bool> isHabitCompletedOnDate(int habitId, DateTime date) async {
+    final db = await database;
+    final dateString =
+        date.toIso8601String().substring(0, 10); // Format: yyyy-MM-dd
+    final result = await db.query(
+      'habit_logs',
+      where: 'habit_id = ? AND date = ?',
+      whereArgs: [habitId, dateString],
+    );
+    return result.isNotEmpty;
+  }
+
+  Future<void> unmarkHabitAsCompleted(int habitId, String date) async {
+    final db = await database;
+    await db.delete(
+      'habit_logs', // ganti dari 'habit_completions'
+      where: 'habit_id = ? AND date = ?',
+      whereArgs: [habitId, date],
+    );
+  }
 }

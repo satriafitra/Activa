@@ -1,8 +1,9 @@
+import 'package:active/models/HabitWithStatus.dart';
 import 'package:active/pages/habit_detail_page.dart';
 import 'package:active/components/sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:active/db/database_helper.dart';
+import 'package:active/services/database_helper.dart';
 import 'package:active/models/habit.dart';
 import 'package:active/pages/add_habit_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -18,25 +19,40 @@ class HabitListPage extends StatefulWidget {
 class _HabitListPageState extends State<HabitListPage> {
   late DatabaseHelper dbHelper;
 
-  List<Habit> _habits = [];
+  Map<int, bool> _completedStatus = {};
 
   // initiate
 
+  List<HabitWithStatus> habitsWithStatus = [];
+
   void _loadHabitsForDate(DateTime date) async {
     final allHabits = await dbHelper.getHabits(); // ambil semua habit
-    final selectedDay =
-        DateFormat('EEEE', 'id_ID').format(date); // Contoh: 'Senin'
+    final selectedDay = DateFormat('EEEE', 'id_ID').format(date);
 
     print('📆 Hari yang difilter: $selectedDay');
 
+    // Filter habit yang aktif di hari itu
     final filtered = allHabits.where((habit) {
       final days = habit.days.split(','); // Misal: ['Senin', 'Selasa']
-      return days.contains(selectedDay); // Langsung dibandingkan
+      return days.contains(selectedDay);
     }).toList();
 
+    print('🎯 Habit yang cocok di hari ini: ${filtered.length}');
+
+    // Cek status selesai masing-masing habit
+    final habitStatuses = await Future.wait(filtered.map((habit) async {
+      final isCompleted =
+          await dbHelper.isHabitCompletedOnDate(habit.id!, date);
+      print('🔄 Status Habit "${habit.name}" di $date => $isCompleted');
+      return HabitWithStatus(habit: habit, isCompleted: isCompleted);
+    }));
+
     setState(() {
-      _habits = filtered;
+      habitsWithStatus = habitStatuses;
     });
+
+    print(
+        '✅ Total HabitWithStatus yang ditampilkan: ${habitsWithStatus.length}');
   }
 
   DateTime selectedDate = DateTime.now();
@@ -80,7 +96,11 @@ class _HabitListPageState extends State<HabitListPage> {
   bool _showConfetti = false;
 
   void _checkAllHabitsCompleted() {
-    if (_allHabitsCompleted(_habits) && !_isConfettiActive) {
+    // Cek semua habit selesai berdasarkan isCompleted milik HabitWithStatus
+    final allCompleted = habitsWithStatus.isNotEmpty &&
+        habitsWithStatus.every((habit) => habit.isCompleted == true);
+
+    if (allCompleted && !_isConfettiActive) {
       setState(() {
         _isConfettiActive = true;
       });
@@ -137,7 +157,11 @@ class _HabitListPageState extends State<HabitListPage> {
     }).toList();
 
     setState(() {
-      _habits = todaysHabits;
+      habitsWithStatus = todaysHabits
+          .map((habit) => HabitWithStatus(
+              habit: habit,
+              isCompleted: false)) // atau default sesuai konteksmu
+          .toList();
     });
 
     _checkAllHabitsCompleted();
@@ -203,27 +227,35 @@ class _HabitListPageState extends State<HabitListPage> {
   }
 
   List<Widget> _buildHabitsByTime(String timeLabel) {
-    final habitsByTime = _habits
-        .where(
-            (habit) => habit.timeOfDay.toLowerCase() == timeLabel.toLowerCase())
+    final habitsByTime = habitsWithStatus
+        .where((habitWithStatus) =>
+            habitWithStatus.habit.timeOfDay.toLowerCase() ==
+            timeLabel.toLowerCase())
         .toList();
 
-    return habitsByTime.asMap().entries.map((entry) {
-      final habit = entry.value;
+    return habitsByTime.asMap().entries.map<Widget>((entry) {
+      final habitWithStatus = entry.value;
+      final habit = habitWithStatus.habit;
+      final isCompleted = habitWithStatus.isCompleted;
+
       final isLast = entry.key == habitsByTime.length - 1;
       final nextHabitTime =
-          isLast ? null : habitsByTime[entry.key + 1].timeOfDay;
+          isLast ? null : habitsByTime[entry.key + 1].habit.timeOfDay;
       final showLine = !isLast && nextHabitTime == habit.timeOfDay;
-      return _buildHabitCard(habit, showLine: showLine);
+
+      return _buildHabitCard(habit, isCompleted, showLine: showLine);
     }).toList();
   }
 
+  // FRONT VIEW
+
   @override
   Widget build(BuildContext context) {
-    // Hitung total dan completed dari _habits
-    final totalTasks = _habits.length;
-    final completedTasks =
-        _habits.where((habit) => habit.progress >= habit.quantity).length;
+    // Hitung total dan completed dari habitsWithStatus
+    final totalTasks = habitsWithStatus.length;
+    final completedTasks = habitsWithStatus
+        .where((habit) => habit.habit.progress >= habit.habit.quantity)
+        .length;
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: Stack(children: [
@@ -243,7 +275,12 @@ class _HabitListPageState extends State<HabitListPage> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      DateFormat('EEEE, d MMMM', 'id_ID').format(selectedDate),
+                      selectedDate.day == DateTime.now().day &&
+                              selectedDate.month == DateTime.now().month &&
+                              selectedDate.year == DateTime.now().year
+                          ? 'Today'
+                          : DateFormat('EEEE, d MMMM', 'id_ID')
+                              .format(selectedDate),
                       style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -401,8 +438,8 @@ class _HabitListPageState extends State<HabitListPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_habits
-                        .any((h) => h.timeOfDay.toLowerCase() == 'pagi')) ...[
+                    if (habitsWithStatus.any(
+                        (h) => h.habit.timeOfDay.toLowerCase() == 'pagi')) ...[
                       Text(
                         "MORNING",
                         style: GoogleFonts.poppins(
@@ -415,8 +452,8 @@ class _HabitListPageState extends State<HabitListPage> {
                       ..._buildHabitsByTime('pagi'),
                       const SizedBox(height: 24),
                     ],
-                    if (_habits
-                        .any((h) => h.timeOfDay.toLowerCase() == 'siang')) ...[
+                    if (habitsWithStatus.any(
+                        (h) => h.habit.timeOfDay.toLowerCase() == 'siang')) ...[
                       Text(
                         "AFTERNOON",
                         style: GoogleFonts.poppins(
@@ -429,8 +466,8 @@ class _HabitListPageState extends State<HabitListPage> {
                       ..._buildHabitsByTime('siang'),
                       const SizedBox(height: 24),
                     ],
-                    if (_habits
-                        .any((h) => h.timeOfDay.toLowerCase() == 'malam')) ...[
+                    if (habitsWithStatus.any(
+                        (h) => h.habit.timeOfDay.toLowerCase() == 'malam')) ...[
                       Text(
                         "EVENING",
                         style: GoogleFonts.poppins(
@@ -549,12 +586,12 @@ class _HabitListPageState extends State<HabitListPage> {
     );
   }
 
-  Widget _buildHabitCard(Habit habit, {bool showLine = true}) {
-    final isCompleted = habit.progress >= habit.quantity;
+  Widget _buildHabitCard(Habit habit, bool isCompleted,
+      {bool showLine = true}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Progress circle di kiriz
+        // Progress circle kiri
         Column(
           children: [
             Container(
@@ -562,24 +599,13 @@ class _HabitListPageState extends State<HabitListPage> {
               height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: habit.progress >= habit.quantity
-                    ? Colors.green
-                    : Colors.white,
-                border: Border.all(
-                  color: Colors.green,
-                  width: 2,
-                ),
+                color: isCompleted ? Colors.green : Colors.white,
+                border: Border.all(color: Colors.green, width: 2),
               ),
-              child: habit.progress >= habit.quantity
-                  ? Icon(
-                      Icons.check,
-                      size: 16,
-                      color: Colors.white,
-                    )
+              child: isCompleted
+                  ? Icon(Icons.check, size: 16, color: Colors.white)
                   : null,
             ),
-
-            // hanya tampil jika showLine true
             if (showLine)
               Container(
                 width: 2,
@@ -592,6 +618,7 @@ class _HabitListPageState extends State<HabitListPage> {
 
         const SizedBox(width: 12),
 
+        // Slidable
         Expanded(
           child: Slidable(
             key: ValueKey(habit.id),
@@ -601,9 +628,11 @@ class _HabitListPageState extends State<HabitListPage> {
                   ? [
                       SlidableAction(
                         onPressed: (_) async {
-                          await _resetHabitProgress(
-                              habit); // Set progress ke 0 dan simpan
-                          setState(() {});
+                          await dbHelper.unmarkHabitAsCompleted(
+                            habit.id!,
+                            DateFormat('yyyy-MM-dd').format(selectedDate),
+                          );
+                          _loadHabitsForDate(selectedDate);
                         },
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
@@ -614,24 +643,16 @@ class _HabitListPageState extends State<HabitListPage> {
                   : [
                       SlidableAction(
                         onPressed: (_) async {
-                          await _incrementHabitProgress(habit);
-                          _loadHabits();
+                          await dbHelper.markHabitAsCompleted(
+                            habit.id!,
+                            DateFormat('yyyy-MM-dd').format(selectedDate),
+                          );
+                          _loadHabitsForDate(selectedDate);
                         },
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
-                        label: '+1',
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      SlidableAction(
-                        onPressed: (_) async {
-                          await _completeHabit(habit);
-                          _loadHabits();
-                        },
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        icon: Icons.done_all,
+                        icon: Icons.check,
                         label: 'Selesai',
-                        borderRadius: BorderRadius.circular(12),
                       ),
                     ],
             ),
@@ -643,10 +664,7 @@ class _HabitListPageState extends State<HabitListPage> {
                     builder: (_) => HabitDetailPage(habit: habit),
                   ),
                 );
-
-                if (result == true) {
-                  _loadHabits(); // <-- ini akan refresh list habit kalau ada perubahan
-                }
+                if (result == true) _loadHabitsForDate(selectedDate);
               },
               borderRadius: BorderRadius.circular(16),
               child: AnimatedContainer(
@@ -722,7 +740,7 @@ class _HabitListPageState extends State<HabitListPage> {
               ),
             ),
           ),
-        )
+        ),
       ],
     );
   }

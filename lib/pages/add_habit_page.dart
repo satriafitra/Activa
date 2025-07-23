@@ -1,7 +1,7 @@
 import 'package:active/pages/habit_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:active/models/habit.dart';
-import 'package:active/db/database_helper.dart';
+import 'package:active/services/database_helper.dart';
 
 class AddHabitPage extends StatefulWidget {
   final Habit? habit; // habit yang ingin diedit

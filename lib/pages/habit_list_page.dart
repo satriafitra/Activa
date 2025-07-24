@@ -19,6 +19,16 @@ class HabitListPage extends StatefulWidget {
 class _HabitListPageState extends State<HabitListPage> {
   late DatabaseHelper dbHelper;
 
+  void debugPrintHabitLogs() async {
+    final db = await dbHelper.database;
+    final logs = await db.query('habit_logs');
+
+    for (var log in logs) {
+      print(
+          '📋 LOG => id: ${log['id']}, habit_id: ${log['habit_id']}, date: "${log['date']}", qty: ${log['quantity_completed']}');
+    }
+  }
+
   Map<int, bool> _completedStatus = {};
 
   bool get isTodaySelected {
@@ -42,7 +52,7 @@ class _HabitListPageState extends State<HabitListPage> {
     print('📆 Hari yang difilter: $selectedDay');
 
     final filtered = allHabits.where((habit) {
-      final days = habit.days.split(',');
+      final days = habit.days.split(',').map((e) => e.trim()).toList();
       return days.contains(selectedDay);
     }).toList();
 
@@ -51,16 +61,27 @@ class _HabitListPageState extends State<HabitListPage> {
     final habitStatuses = await Future.wait(filtered.map((habit) async {
       final isCompleted =
           await dbHelper.isHabitCompletedOnDate(habit.id!, date);
-      print('🔄 Status Habit "${habit.name}" di $date => $isCompleted');
-      return HabitWithStatus(habit: habit, isCompleted: isCompleted);
-    }));
+      final quantityDone = await dbHelper.getQuantityCompletedOnDate(
+        habit.id!,
+        DateFormat('yyyy-MM-dd').format(date),
+      );
+
+      return HabitWithStatus(
+        habit: habit,
+        isCompleted: isCompleted,
+        quantityCompleted: quantityDone,
+      );
+    })).then(
+        (value) => value.toList()); // ✅ agar tipe-nya List<HabitWithStatus>
 
     setState(() {
       habitsWithStatus = habitStatuses;
     });
 
-    // ✅ Panggil setelah setState
     _checkAllHabitsCompleted();
+
+    // ✅ Debug isi log habit setiap load
+    debugPrintHabitLogs(); // <--- tambahkan ini di sini
   }
 
   void _triggerConfetti() {
@@ -226,7 +247,8 @@ class _HabitListPageState extends State<HabitListPage> {
       habitsWithStatus = todaysHabits
           .map((habit) => HabitWithStatus(
               habit: habit,
-              isCompleted: false)) // atau default sesuai konteksmu
+              isCompleted: false,
+              quantityCompleted: 0)) // ✅ fix error
           .toList();
     });
 
@@ -309,7 +331,9 @@ class _HabitListPageState extends State<HabitListPage> {
           isLast ? null : habitsByTime[entry.key + 1].habit.timeOfDay;
       final showLine = !isLast && nextHabitTime == habit.timeOfDay;
 
-      return _buildHabitCard(habit, isCompleted, showLine: showLine);
+      return _buildHabitCard(habit, isCompleted,
+          quantityCompleted: habitWithStatus.quantityCompleted,
+          showLine: showLine);
     }).toList();
   }
 
@@ -515,8 +539,7 @@ class _HabitListPageState extends State<HabitListPage> {
                       ),
                       const SizedBox(height: 12),
                       Column(
-                        key: ValueKey(
-                            'pagi-${selectedDate.toIso8601String()}'),
+                        key: ValueKey('pagi-${selectedDate.toIso8601String()}'),
                         children: _buildHabitsByTime('pagi'),
                       ),
                       const SizedBox(height: 24),
@@ -533,8 +556,8 @@ class _HabitListPageState extends State<HabitListPage> {
                       ),
                       const SizedBox(height: 12),
                       Column(
-                        key: ValueKey(
-                            'siang-${selectedDate.toIso8601String()}'),
+                        key:
+                            ValueKey('siang-${selectedDate.toIso8601String()}'),
                         children: _buildHabitsByTime('siang'),
                       ),
                       const SizedBox(height: 24),
@@ -551,8 +574,8 @@ class _HabitListPageState extends State<HabitListPage> {
                       ),
                       const SizedBox(height: 12),
                       Column(
-                        key: ValueKey(
-                            'malam-${selectedDate.toIso8601String()}'),
+                        key:
+                            ValueKey('malam-${selectedDate.toIso8601String()}'),
                         children: _buildHabitsByTime('malam'),
                       ),
                     ],
@@ -664,7 +687,7 @@ class _HabitListPageState extends State<HabitListPage> {
   }
 
   Widget _buildHabitCard(Habit habit, bool isCompleted,
-      {bool showLine = true}) {
+      {required int quantityCompleted, bool showLine = true}) {
     final isInactiveDay = !isTodaySelected;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -823,7 +846,7 @@ class _HabitListPageState extends State<HabitListPage> {
                             const SizedBox(height: 2),
                             Text(
                               isInactiveDay
-                                  ? "${habit.quantity} ${habit.unit}"
+                                  ? "${quantityCompleted}/${habit.quantity} ${habit.unit}"
                                   : "${habit.progress}/${habit.quantity} ${habit.unit}",
                               style: GoogleFonts.poppins(
                                 color: isInactiveDay

@@ -3,6 +3,7 @@ import 'package:active/models/habit.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:intl/intl.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -130,13 +131,11 @@ class DatabaseHelper {
   Future<void> markHabitAsCompleted(int habitId, String date) async {
     final db = await database;
 
-    // Ambil habit dari database untuk dapatkan quantity
     final habit = await getHabitById(habitId);
     if (habit == null) return;
 
     final int quantity = habit.quantity;
 
-    // Simpan ke habit_logs
     await db.insert(
       'habit_logs',
       {
@@ -147,7 +146,6 @@ class DatabaseHelper {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    // Update progress += quantity
     await db.rawUpdate(
       '''
     UPDATE habits
@@ -196,5 +194,19 @@ class DatabaseHelper {
     ''',
       [quantity, habitId],
     );
+  }
+
+  Future<int> getQuantityCompletedOnDate(int habitId, String date) async {
+    final db = await database;
+    final result = await db.query(
+      'habit_logs',
+      where: 'habit_id = ? AND date = ?',
+      whereArgs: [habitId, date],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first['quantity_completed'] as int;
+    }
+    return 0;
   }
 }

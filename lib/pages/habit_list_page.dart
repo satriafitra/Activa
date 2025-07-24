@@ -489,7 +489,7 @@ class _HabitListPageState extends State<HabitListPage> {
                   padding: const EdgeInsets.all(16),
                   child: Stack(
                     children: [
-                      // Kiri bawah: teks quote atau task complete
+                      // Kiri bawah: TASK COMPLETE + jumlah task
                       Align(
                         alignment: Alignment.bottomLeft,
                         child: Column(
@@ -516,12 +516,12 @@ class _HabitListPageState extends State<HabitListPage> {
                         ),
                       ),
 
-                      // Kanan bawah kosong jika bukan hari ini
-                      if (isTodaySelected)
+                      // Kanan bawah: hanya muncul jika BUKAN hari ini
+                      if (!isTodaySelected)
                         Align(
                           alignment: Alignment.bottomRight,
                           child: Text(
-                            "Keep it up!",
+                            "New day, new chances.",
                             style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 14,

@@ -39,6 +39,7 @@ flutter:
   assets:
     - assets/images/banner.png
     - assets/images/sidebar_banner.png
+    - assets/images/banner_unc.png
     - assets/animations/confetti.json
     - assets/animations/Chatbot.json
     - assets/sounds/success.wav

@@ -19,6 +19,9 @@ class HabitListPage extends StatefulWidget {
 class _HabitListPageState extends State<HabitListPage> {
   late DatabaseHelper dbHelper;
 
+  int _completedTasks = 0;
+  int _totalTasks = 0;
+
   void debugPrintHabitLogs() async {
     final db = await dbHelper.database;
     final logs = await db.query('habit_logs');
@@ -74,8 +77,13 @@ class _HabitListPageState extends State<HabitListPage> {
     })).then(
         (value) => value.toList()); // ✅ agar tipe-nya List<HabitWithStatus>
 
+    int completedTasks = habitStatuses.where((h) => h.isCompleted).length;
+    int totalTasks = habitStatuses.length;
+
     setState(() {
       habitsWithStatus = habitStatuses;
+      _completedTasks = completedTasks;
+      _totalTasks = totalTasks;
     });
 
     _checkAllHabitsCompleted();
@@ -463,63 +471,68 @@ class _HabitListPageState extends State<HabitListPage> {
 
               const SizedBox(height: 16),
 
-              // Image banner
-              isTodaySelected
-                  ? Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Container(
-                        height: 140,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          image: DecorationImage(
-                            image: AssetImage('assets/images/banner.png'),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: Stack(
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Container(
+                  height: 140,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    image: DecorationImage(
+                      image: AssetImage(
+                        isTodaySelected
+                            ? 'assets/images/banner.png'
+                            : 'assets/images/banner_unc.png',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Stack(
+                    children: [
+                      // Kiri bawah: teks quote atau task complete
+                      Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Align(
-                              alignment: Alignment.bottomLeft,
-                              child: Text(
-                                "Keep it up!",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            Text(
+                              "TASK COMPLETE",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 12,
                               ),
                             ),
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    "TASK COMPLETE",
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    "$completedTasks/$totalTasks",
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                            const SizedBox(height: 4),
+                            Text(
+                              "$_completedTasks/$_totalTasks",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    )
-                  : const SizedBox.shrink(),
+
+                      // Kanan bawah kosong jika bukan hari ini
+                      if (isTodaySelected)
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: Text(
+                            "Keep it up!",
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 20),
               Padding(
@@ -701,18 +714,31 @@ class _HabitListPageState extends State<HabitListPage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isCompleted ? Colors.green : Colors.white,
-                border: Border.all(color: Colors.green, width: 2),
+                border: Border.all(color: Colors.green, width: 4),
               ),
               child: isCompleted
                   ? Icon(Icons.check, size: 16, color: Colors.white)
                   : null,
             ),
             if (showLine)
-              Container(
-                width: 2,
-                height: 50,
-                color: Colors.grey.shade300,
-                margin: const EdgeInsets.symmetric(vertical: 4),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final dashHeight = 6.0;
+                  final dashCount = (80 / (dashHeight * 2)).floor();
+
+                  return Column(
+                    children: List.generate(dashCount, (_) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Container(
+                          width: 2,
+                          height: dashHeight,
+                          color: Colors.grey.shade300,
+                        ),
+                      );
+                    }),
+                  );
+                },
               ),
           ],
         ),

@@ -60,8 +60,7 @@ class _HabitListPageState extends State<HabitListPage> {
       final days = habit.days.split(',').map((e) => e.trim()).toList();
 
       if (days.contains(selectedDay)) {
-        final hasLog = await dbHelper.isHabitLogExist(habit.id!, date);
-        if (hasLog) filtered.add(habit);
+        filtered.add(habit); // ✅ tampilkan walau belum ada log
       }
     }
 
@@ -76,8 +75,8 @@ class _HabitListPageState extends State<HabitListPage> {
       );
 
       habit.progress = quantityDone; // <- ✅ tambahkan baris ini
-      print('📦 Progress habit "${habit.name}" pada ${DateFormat('yyyy-MM-dd').format(date)} adalah $quantityDone');
-
+      print(
+          '📦 Progress habit "${habit.name}" pada ${DateFormat('yyyy-MM-dd').format(date)} adalah $quantityDone');
 
       return HabitWithStatus(
         habit: habit,

@@ -141,14 +141,15 @@ class _ChatPageState extends State<ChatPage> {
                             children: [
                               if (isHaiBubble)
                                 Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: SizedBox(
-                                    width: 80,
-                                    height: 80,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 20),
+                                  child: Center(
                                     child: Lottie.asset(
-                                      'assets/animations/Chatbot.json', // path ke file lottie kamu
+                                      'assets/animations/Chatbot.json',
                                       repeat: true,
-                                      fit: BoxFit.contain,
+                                      fit: BoxFit.cover,
+                                      height: 150,
+                                      width: 150
                                     ),
                                   ),
                                 ),

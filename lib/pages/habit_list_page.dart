@@ -17,6 +17,80 @@ class HabitListPage extends StatefulWidget {
 }
 
 class _HabitListPageState extends State<HabitListPage> {
+  void _showStreakOverlay(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 280,
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 0, bottom: 42),
+              decoration: BoxDecoration(
+                color: Color(0xFF1B7DFD),
+                borderRadius: BorderRadius.circular(38),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Lottie.asset(
+                    'assets/animations/bronze.json',
+                    width: 150,
+                    height: 150,
+                    repeat: true,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    '1 Day Streak!',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Keep going your\ngreat job!',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      color: const Color.fromARGB(211, 255, 255, 255),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    '24 Days more to Silver!',
+                    style: GoogleFonts.poppins(
+                      color: Colors.amberAccent,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: 0.3,
+                        minHeight: 10,
+                        backgroundColor: Colors.white24,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Colors.amberAccent),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   late DatabaseHelper dbHelper;
 
   int _completedTasks = 0;
@@ -112,10 +186,14 @@ class _HabitListPageState extends State<HabitListPage> {
       setState(() {
         _isConfettiVisible = false;
       });
+
       Future.delayed(Duration(milliseconds: 500), () {
         setState(() {
           _isConfettiActive = false;
         });
+
+        // ⬇️ Tambahkan ini agar overlay medal muncul setelah confetti selesai
+        _showStreakOverlay(context);
       });
     });
   }
@@ -226,6 +304,9 @@ class _HabitListPageState extends State<HabitListPage> {
                   _isConfettiActive = false;
                 });
                 print('🎊 Confetti selesai.');
+
+                // 🎖️ Tampilkan streak overlay
+                _showStreakOverlay(context);
               }
             });
           }

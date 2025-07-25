@@ -42,6 +42,8 @@ flutter:
     - assets/images/banner_unc.png
     - assets/animations/confetti.json
     - assets/animations/Chatbot.json
+    - assets/animations/medal.json
+    - assets/animations/bronze.json
     - assets/animations/acto.json
     - assets/sounds/success.wav
     - assets/sounds/success.mp3

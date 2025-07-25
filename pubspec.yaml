@@ -41,6 +41,10 @@ flutter:
     - assets/images/banner.png
     - assets/images/sidebar_banner.png
     - assets/images/banner_unc.png
+    - assets/images/morning.png
+    - assets/images/day.png
+    - assets/images/afternoon.png
+    - assets/images/evening.png
 
     # animations
     - assets/animations/confetti.json

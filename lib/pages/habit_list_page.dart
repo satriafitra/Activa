@@ -19,6 +19,36 @@ class HabitListPage extends StatefulWidget {
 class _HabitListPageState extends State<HabitListPage> {
   late DatabaseHelper dbHelper;
 
+  // realtime image
+  String _getTimeBasedBannerImage() {
+    final hour = DateTime.now().hour;
+
+    if (hour >= 6 && hour < 12) {
+      return 'assets/images/morning.png';
+    } else if (hour >= 12 && hour < 15) {
+      return 'assets/images/day.png';
+    } else if (hour >= 15 && hour < 18) {
+      return 'assets/images/afternoon.png';
+    } else {
+      return 'assets/images/evening.png';
+    }
+  }
+
+  // realtime greetings
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+
+    if (hour >= 6 && hour < 12) {
+      return 'Good morning!';
+    } else if (hour >= 12 && hour < 15) {
+      return 'Good day!';
+    } else if (hour >= 15 && hour < 18) {
+      return 'Good afternoon!';
+    } else {
+      return 'Good evening!';
+    }
+  }
+
   int _completedTasks = 0;
   int _totalTasks = 0;
 
@@ -261,8 +291,6 @@ class _HabitListPageState extends State<HabitListPage> {
     Future.delayed(const Duration(seconds: 4), () {
       if (Navigator.canPop(context)) {
         Navigator.of(context, rootNavigator: true).pop();
-
-        
       }
     });
   }
@@ -602,7 +630,7 @@ class _HabitListPageState extends State<HabitListPage> {
                     image: DecorationImage(
                       image: AssetImage(
                         isTodaySelected
-                            ? 'assets/images/banner.png'
+                            ? _getTimeBasedBannerImage()
                             : 'assets/images/banner_unc.png',
                       ),
                       fit: BoxFit.cover,
@@ -611,7 +639,36 @@ class _HabitListPageState extends State<HabitListPage> {
                   padding: const EdgeInsets.all(16),
                   child: Stack(
                     children: [
-                      // Kiri bawah: TASK COMPLETE + jumlah task
+                      // 🔼 Kiri atas: sapaan
+                      if (isTodaySelected)
+                        Align(
+                          alignment: Alignment.topLeft,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "Hi, ",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _getGreeting(),
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      // 🔽 Kiri bawah: TASK COMPLETE
                       Align(
                         alignment: Alignment.bottomLeft,
                         child: Column(
@@ -638,7 +695,7 @@ class _HabitListPageState extends State<HabitListPage> {
                         ),
                       ),
 
-                      // Kanan bawah: hanya muncul jika BUKAN hari ini
+                      // 🔽 Kanan bawah: motivasi jika BUKAN hari ini
                       if (!isTodaySelected)
                         Align(
                           alignment: Alignment.bottomRight,

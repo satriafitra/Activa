@@ -60,7 +60,7 @@ class DatabaseHelper {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       habit_id INTEGER,
       date TEXT,
-      quantity_completed INTEGER DEFAULT 1,
+      quantity_completed INTEGER DEFAULT 0,
       FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
     )
   ''');
@@ -145,15 +145,6 @@ class DatabaseHelper {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-
-    await db.rawUpdate(
-      '''
-    UPDATE habits
-    SET progress = progress + ?
-    WHERE id = ?
-    ''',
-      [quantity, habitId],
-    );
   }
 
   // ✅ Cek apakah habit selesai di tanggal tertentu (dengan parameter DateTime)
@@ -163,7 +154,7 @@ class DatabaseHelper {
         date.toIso8601String().substring(0, 10); // Format: yyyy-MM-dd
     final result = await db.query(
       'habit_logs',
-      where: 'habit_id = ? AND date = ?',
+      where: 'habit_id = ? AND date = ? AND quantity_completed > 0',
       whereArgs: [habitId, dateString],
     );
     return result.isNotEmpty;
@@ -198,15 +189,73 @@ class DatabaseHelper {
 
   Future<int> getQuantityCompletedOnDate(int habitId, String date) async {
     final db = await database;
+    final result = await db.rawQuery(
+      '''
+    SELECT SUM(quantity_completed) as total
+    FROM habit_logs
+    WHERE habit_id = ? AND date = ?
+    ''',
+      [habitId, date],
+    );
+
+    int qty = 0;
+
+    if (result.isNotEmpty) {
+      qty = result.first['total'] == null ? 0 : result.first['total'] as int;
+    }
+
+    print('🎯 Total qty pada $date untuk habit $habitId = $qty');
+    return qty;
+  }
+
+  // nambah habit multidays hanya masa depan
+
+  Future<void> generateHabitLogs({
+    required int habitId,
+    required List<int> repeatDays,
+    int daysForward = 30,
+  }) async {
+    final db = await database;
+    final now = DateTime.now();
+    final formatter = DateFormat('yyyy-MM-dd');
+
+    for (int i = 0; i <= daysForward; i++) {
+      final date =
+          DateTime(now.year, now.month, now.day).add(Duration(days: i));
+
+      final weekday = date.weekday;
+
+      print("🔄 Cek tanggal: ${formatter.format(date)} (weekday: $weekday)");
+
+      if (!repeatDays.contains(weekday)) continue;
+
+      final formattedDate = formatter.format(date);
+
+      final exists = await db.query(
+        'habit_logs',
+        where: 'habit_id = ? AND date = ?',
+        whereArgs: [habitId, formattedDate],
+      );
+
+      if (exists.isEmpty) {
+        print('🆕 INSERT log for $formattedDate');
+        await db.insert('habit_logs', {
+          'habit_id': habitId,
+          'date': formattedDate,
+          'quantity_completed': 0,
+        });
+      }
+    }
+  }
+
+  Future<bool> isHabitLogExist(int habitId, DateTime date) async {
+    final db = await database;
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
     final result = await db.query(
       'habit_logs',
       where: 'habit_id = ? AND date = ?',
-      whereArgs: [habitId, date],
+      whereArgs: [habitId, dateStr],
     );
-
-    if (result.isNotEmpty) {
-      return result.first['quantity_completed'] as int;
-    }
-    return 0;
+    return result.isNotEmpty;
   }
 }

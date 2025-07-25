@@ -2,6 +2,7 @@ import 'package:active/pages/habit_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:active/models/habit.dart';
 import 'package:active/services/database_helper.dart';
+import 'package:intl/intl.dart';
 
 class AddHabitPage extends StatefulWidget {
   final Habit? habit; // habit yang ingin diedit
@@ -141,7 +142,7 @@ class _AddHabitPageState extends State<AddHabitPage> {
         icon: _icon,
         color: _color,
         timeOfDay: _timeOfDay,
-        days: _selectedDays.join(','),
+        days: _selectedDays.join(','), // Misal: "1,3,5"
         streak: widget.habit?.streak ?? 0,
         medal: widget.habit?.medal ?? 'bronze',
         quantity: int.parse(_quantityController.text),
@@ -155,13 +156,48 @@ class _AddHabitPageState extends State<AddHabitPage> {
             : null,
       );
 
-      // 🔍 Tambahkan print ini untuk debug:
       print("📅 Selected days saat simpan: ${_selectedDays.join(',')}");
 
       try {
         if (widget.habit == null) {
-          await DatabaseHelper.instance.insertHabit(habit);
+          // 🔹 Simpan habit baru
+          final habitId = await DatabaseHelper.instance.insertHabit(habit);
+
+          final db = await DatabaseHelper.instance.database;
+
+
+          // Bersihkan habit_logs yang tanggalnya sudah lewat
+          await db.delete(
+            'habit_logs',
+            where: 'habit_id = ? AND date < ?',
+            whereArgs: [
+              habitId,
+              DateFormat('yyyy-MM-dd').format(DateTime.now())
+            ],
+          );
+
           print("✅ Habit ditambahkan!");
+
+          // 🔹 Generate logs hanya untuk masa depan
+          final Map<String, int> dayNameToNumber = {
+            'Senin': 1,
+            'Selasa': 2,
+            'Rabu': 3,
+            'Kamis': 4,
+            'Jumat': 5,
+            'Sabtu': 6,
+            'Minggu': 7,
+          };
+
+          final repeatDays =
+              habit.dayList.map((e) => dayNameToNumber[e]!).toList();
+
+          print("🎯 Hari yang dipilih (angka): $repeatDays");
+
+          await DatabaseHelper.instance.generateHabitLogs(
+            habitId: habitId,
+            repeatDays: repeatDays,
+          );
         } else {
           await DatabaseHelper.instance.updateHabit(habit);
           print("✅ Habit diupdate!");

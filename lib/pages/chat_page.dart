@@ -140,18 +140,13 @@ class _ChatPageState extends State<ChatPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (isHaiBubble)
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 20),
-                                  child: Center(
-                                    child: Lottie.asset(
-                                      'assets/animations/Chatbot.json',
+                                Center(
+                                  child: Lottie.asset(
+                                      'assets/animations/acto.json',
                                       repeat: true,
                                       fit: BoxFit.cover,
-                                      height: 150,
-                                      width: 150
-                                    ),
-                                  ),
+                                      height: 180,
+                                      width: 180),
                                 ),
                               _bubble(m.text, m.role),
                             ],
@@ -183,7 +178,7 @@ class _ChatPageState extends State<ChatPage> {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6),
+        margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         constraints: const BoxConstraints(maxWidth: 300),
         decoration: BoxDecoration(

@@ -69,6 +69,8 @@ class _HabitListPageState extends State<HabitListPage> {
         DateFormat('yyyy-MM-dd').format(date),
       );
 
+      habit.progress = quantityDone; // <- ✅ tambahkan baris ini
+
       return HabitWithStatus(
         habit: habit,
         isCompleted: isCompleted,
@@ -871,9 +873,7 @@ class _HabitListPageState extends State<HabitListPage> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              isInactiveDay
-                                  ? "${quantityCompleted}/${habit.quantity} ${habit.unit}"
-                                  : "${habit.progress}/${habit.quantity} ${habit.unit}",
+                              "${habit.progress}/${habit.quantity} ${habit.unit}",
                               style: GoogleFonts.poppins(
                                 color: isInactiveDay
                                     ? Colors.grey

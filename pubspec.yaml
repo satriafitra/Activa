@@ -37,16 +37,22 @@ flutter:
  
   uses-material-design: true
   assets:
+    # images
     - assets/images/banner.png
     - assets/images/sidebar_banner.png
     - assets/images/banner_unc.png
+
+    # animations
     - assets/animations/confetti.json
     - assets/animations/Chatbot.json
     - assets/animations/medal.json
     - assets/animations/bronze.json
     - assets/animations/acto.json
+
+    # sounds
     - assets/sounds/success.wav
     - assets/sounds/success.mp3
+    - assets/sounds/streak.wav
     - .env
 
   

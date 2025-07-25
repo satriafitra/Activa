@@ -27,16 +27,17 @@ class _HabitListPageState extends State<HabitListPage> {
             color: Colors.transparent,
             child: Container(
               width: 280,
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 0, bottom: 42),
+              padding: const EdgeInsets.only(
+                  left: 20, right: 20, top: 0, bottom: 42),
               decoration: BoxDecoration(
-                color: Color(0xFF1B7DFD),
+                color: Color.fromARGB(255, 0, 123, 199),
                 borderRadius: BorderRadius.circular(38),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Lottie.asset(
-                    'assets/animations/bronze.json',
+                    'assets/animations/medal.json',
                     width: 150,
                     height: 150,
                     repeat: true,
@@ -128,13 +129,21 @@ class _HabitListPageState extends State<HabitListPage> {
 
     print('📆 Hari yang difilter: $selectedDay');
 
+    // Ambil hanya tanggal (tanpa jam)
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedOnlyDate = DateTime(date.year, date.month, date.day);
+
     final filtered = <Habit>[];
 
     for (final habit in allHabits) {
       final days = habit.days.split(',').map((e) => e.trim()).toList();
 
+      // ⛔ Lewati habit kalau tanggal yang dipilih ada di masa lalu
+      if (selectedOnlyDate.isBefore(today)) continue;
+
       if (days.contains(selectedDay)) {
-        filtered.add(habit); // ✅ tampilkan walau belum ada log
+        filtered.add(habit); // ✅ hanya habit yang aktif dan bukan masa lalu
       }
     }
 
@@ -148,17 +157,18 @@ class _HabitListPageState extends State<HabitListPage> {
         DateFormat('yyyy-MM-dd').format(date),
       );
 
-      habit.progress = quantityDone; // <- ✅ tambahkan baris ini
+      habit.progress = quantityDone;
+
       print(
-          '📦 Progress habit "${habit.name}" pada ${DateFormat('yyyy-MM-dd').format(date)} adalah $quantityDone');
+        '📦 Progress habit "${habit.name}" pada ${DateFormat('yyyy-MM-dd').format(date)} adalah $quantityDone',
+      );
 
       return HabitWithStatus(
         habit: habit,
         isCompleted: isCompleted,
         quantityCompleted: quantityDone,
       );
-    })).then(
-        (value) => value.toList()); // ✅ agar tipe-nya List<HabitWithStatus>
+    })).then((value) => value.toList());
 
     int completedTasks = habitStatuses.where((h) => h.isCompleted).length;
     int totalTasks = habitStatuses.length;
@@ -171,8 +181,7 @@ class _HabitListPageState extends State<HabitListPage> {
 
     _checkAllHabitsCompleted();
 
-    // ✅ Debug isi log habit setiap load
-    debugPrintHabitLogs(); // <--- tambahkan ini di sini
+    debugPrintHabitLogs();
   }
 
   void _triggerConfetti() {

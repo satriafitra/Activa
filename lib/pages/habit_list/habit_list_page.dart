@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, unused_element, unused_local_variable
+
 import 'package:active/models/HabitWithStatus.dart';
 import 'package:active/pages/habit_detail_page.dart';
 import 'package:active/components/sidebar.dart';
@@ -622,8 +624,7 @@ class _HabitListPageState extends State<HabitListPage> {
           );
           _loadHabitsForDate(selectedDate);
         },
-        backgroundColor: const Color.fromARGB(
-            255, 0, 97, 52), // Ganti warna sesuai keinginan
+        backgroundColor: Colors.green,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50), // Rounded
         ),

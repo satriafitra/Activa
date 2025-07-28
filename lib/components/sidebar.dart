@@ -1,4 +1,5 @@
 import 'package:active/pages/chat_page.dart';
+import 'package:active/pages/streak.dart';
 import 'package:active/pages/habit_list/habit_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -143,6 +144,11 @@ class _SidebarMenuItem extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => HabitListPage()),
+            );
+          } else if (title == "Your stats") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => StatsPage()),
             );
           }
           // Tambahkan else if untuk navigasi menu lainnya

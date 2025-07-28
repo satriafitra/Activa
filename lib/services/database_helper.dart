@@ -4,6 +4,8 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:active/pages/habit_list/habit_list_utils.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -138,7 +140,15 @@ class DatabaseHelper {
 
     final int quantity = habit.quantity;
 
-    // Insert log selesai
+    // ⛔ Cek dulu: apakah sudah pernah ditandai selesai hari ini?
+    final alreadyCompleted =
+        await isHabitCompletedOnDate(habitId, DateTime.parse(date));
+    if (alreadyCompleted) {
+      // ✅ Sudah pernah, cukup update progress doang (atau bahkan skip)
+      return;
+    }
+
+    // ✅ Masukkan ke habit_logs
     await db.insert(
       'habit_logs',
       {
@@ -149,11 +159,8 @@ class DatabaseHelper {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    // Cek apakah tanggalnya hari ini
-    final todayString = DateTime.now().toIso8601String().substring(0, 10);
-    if (date == todayString) {
-      await updateStreak(habitId);
-    }
+    // ✅ Update streak hanya saat *baru* selesai
+    await updateStreak(habitId);
   }
 
   // ✅ Cek apakah habit selesai di tanggal tertentu (dengan parameter DateTime)
@@ -319,40 +326,96 @@ class DatabaseHelper {
     print('🏆 Longest streak sekarang: $longest');
   }
 
-  Future<void> resetStreakIfMissedToday(int habitId) async {
+  Future<void> checkAndResetStreaks() async {
+    print('🔍 Memulai pengecekan reset streak...');
+
     final db = await database;
     final today = DateTime.now();
-    final dateStr = today.toIso8601String().substring(0, 10);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final todayStr = today.toIso8601String().substring(0, 10);
+    final yesterdayStr = yesterday.toIso8601String().substring(0, 10);
 
-    final habit = await getHabitById(habitId);
-    if (habit == null) return;
+    final allHabits = await getAllHabits();
 
-    // Cek apakah hari ini termasuk jadwal habit
-    final todayWeekday = today.weekday.toString(); // 1 = Senin ... 7 = Minggu
-    if (!habit.dayList.contains(todayWeekday)) return;
+    for (final habit in allHabits) {
+      final activeDays = habit.dayList;
+      final todayDay = getDayName(today.weekday);
+      final yesterdayDay = getDayName(yesterday.weekday);
 
-    // Cek apakah habit hari ini sudah dikerjakan
-    final result = await db.query(
-      'habit_logs',
-      where: 'habit_id = ? AND date = ? AND quantity_completed > 0',
-      whereArgs: [habitId, dateStr],
-    );
+      final isActiveToday = activeDays.contains(todayDay);
+      final wasActiveYesterday = activeDays.contains(yesterdayDay);
 
-    // Jika belum ada log hari ini → reset streak
-    if (result.isEmpty) {
-      await db.update(
-        'habits',
-        {'current_streak': 0},
-        where: 'id = ?',
-        whereArgs: [habitId],
-      );
+      final completedYesterday =
+          await isHabitCompletedOnDate(habit.id!, yesterday);
+      final completedToday = await isHabitCompletedOnDate(habit.id!, today);
+
+      // 🔍 Tambahan debug untuk memastikan ada log atau tidak kemarin
+      final totalQty =
+          await getHabitCompletionQuantity(habit.id!, yesterdayStr);
+      print(
+          '🔎 Total qty log kemarin (${yesterdayStr}) untuk ${habit.name} = $totalQty');
+
+      print('🧠 Evaluasi habit: ${habit.name}');
+      print('📋 Active days: $activeDays');
+      print(
+          '📆 Kemarin: $yesterdayStr ($yesterdayDay), wasActiveYesterday: $wasActiveYesterday');
+      print(
+          '📆 Hari ini: $todayStr ($todayDay), isActiveToday: $isActiveToday');
+      print('✔️ completedYesterday: $completedYesterday');
+      print('✔️ completedToday: $completedToday');
+
+      if (wasActiveYesterday && !completedYesterday) {
+        await db.update(
+          'habits',
+          {
+            'current_streak': 0,
+          },
+          where: 'id = ?',
+          whereArgs: [habit.id],
+        );
+
+        print(
+          '🔁 Streak habit "${habit.name}" di-reset ke 0 karena hari ini ($todayStr) adalah hari aktif dan tidak dikerjakan.',
+        );
+      }
     }
   }
 
-  Future<List<Habit>> getAllHabits() async {
-  final db = await database;
-  final result = await db.query('habits');
-  return result.map((map) => Habit.fromMap(map)).toList();
-}
+  Future<int> getHabitCompletionQuantity(int habitId, String date) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+    SELECT SUM(quantity_completed) as total
+    FROM habit_logs
+    WHERE habit_id = ? AND date = ?
+  ''', [habitId, date]);
 
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<List<Habit>> getAllHabits() async {
+    final db = await database;
+    final result = await db.query('habits');
+    return result.map((map) => Habit.fromMap(map)).toList();
+  }
+
+  Future<void> runStreakResetOncePerDay() async {
+    print('📌 Memulai pengecekan reset streak harian...');
+
+    final prefs = await SharedPreferences.getInstance();
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+
+    final lastReset = prefs.getString('last_streak_reset_date');
+
+    if (lastReset != todayStr) {
+      // Jalankan reset streak
+      await checkAndResetStreaks();
+
+      // Simpan tanggal hari ini sebagai tanggal terakhir reset
+      await prefs.setString('last_streak_reset_date', todayStr);
+
+      print('✅ Reset streak berhasil dijalankan hari ini');
+    } else {
+      print('ℹ️ Reset streak sudah dijalankan hari ini ($todayStr), skip.');
+    }
+  }
 }

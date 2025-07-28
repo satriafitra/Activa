@@ -12,6 +12,8 @@ import 'package:active/models/habit.dart';
 import 'package:active/pages/add_habit_page.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'visual_feedback.dart';
 
 class HabitListPage extends StatefulWidget {
@@ -90,16 +92,16 @@ class _HabitListPageState extends State<HabitListPage> {
     final selected = DateFormat('yyyy-MM-dd').format(selectedDate);
 
     final isToday = today == selected;
-    print('📆 Mengecek confetti untuk: $selected (isToday: $isToday)');
+    // print('📆 Mengecek confetti untuk: $selected (isToday: $isToday)');
 
     if (!isToday) {
-      print('❌ Bukan hari ini, confetti tidak dicek.');
+      // print('❌ Bukan hari ini, confetti tidak dicek.');
       return;
     }
 
     // Ambil nama hari
     final selectedDay = DateFormat('EEEE', 'id_ID').format(selectedDate);
-    print('📅 Nama hari saat ini: $selectedDay');
+    // print('📅 Nama hari saat ini: $selectedDay');
 
     // Filter hanya habit yang aktif di hari ini
     final todayHabits = habitsWithStatus.where((habit) {
@@ -107,19 +109,19 @@ class _HabitListPageState extends State<HabitListPage> {
       return days.contains(selectedDay);
     }).toList();
 
-    print('🟦 Jumlah habit aktif hari ini: ${todayHabits.length}');
-    print(
-        '✅ Jumlah habit yang selesai: ${todayHabits.where((h) => h.isCompleted).length}');
+    // print('🟦 Jumlah habit aktif hari ini: ${todayHabits.length}');
+    // print(
+        // '✅ Jumlah habit yang selesai: ${todayHabits.where((h) => h.isCompleted).length}');
 
     final allCompleted = todayHabits.isNotEmpty &&
         todayHabits.every((habit) => habit.isCompleted == true);
 
-    print('✅ allCompleted: $allCompleted');
-    print('❓ _wasAllCompleted: $_wasAllCompleted');
-    print('❓ _shouldCheckConfetti: $_shouldCheckConfetti');
+    // print('✅ allCompleted: $allCompleted');
+    // print('❓ _wasAllCompleted: $_wasAllCompleted');
+    // print('❓ _shouldCheckConfetti: $_shouldCheckConfetti');
 
     if (allCompleted && !_wasAllCompleted && _shouldCheckConfetti) {
-      print('🎉 Semua habit selesai! Menjalankan confetti...');
+      // print('🎉 Semua habit selesai! Menjalankan confetti...');
 
       _wasAllCompleted = true;
       _shouldCheckConfetti = false;
@@ -172,14 +174,31 @@ class _HabitListPageState extends State<HabitListPage> {
   @override
   void initState() {
     super.initState();
-    _day = getDayName(DateTime.now().weekday);
-    dbHelper = DatabaseHelper.instance; // ✅
-    // ✅ inisialisasi dbHelper
 
-    selectedDate = DateTime.now(); // ✅ penting untuk awal tampilan
-    _dayName = getDayName(selectedDate.weekday);
+    dbHelper = DatabaseHelper.instance; // ✅ Inisialisasi helper DB
 
-    _loadHabitsForDate(selectedDate); // ✅ load habit berdasarkan tanggal awal
+    runStreakResetOncePerDay(); // ✅ Cek streak hanya sekali per hari
+
+    _day = getDayName(DateTime.now().weekday); // Nama hari saat ini
+
+    selectedDate = DateTime.now(); // Awal tampilan berdasarkan hari ini
+    _dayName = getDayName(selectedDate.weekday); // Nama hari sesuai tanggal
+
+    _loadHabitsForDate(selectedDate); // Load habits hari ini
+  }
+
+  Future<void> runStreakResetOncePerDay() async {
+    final prefs = await SharedPreferences.getInstance();
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+    final lastResetDate = prefs.getString('last_streak_reset_date');
+
+    if (lastResetDate != todayStr) {
+      await DatabaseHelper.instance.checkAndResetStreaks();
+      await prefs.setString('last_streak_reset_date', todayStr);
+      print('✅ Reset streak berhasil dilakukan hari ini.');
+    } else {
+      print('🔁 Reset streak sudah dilakukan hari ini, skip.');
+    }
   }
 
   Future<void> _loadHabits() async {
@@ -298,7 +317,6 @@ class _HabitListPageState extends State<HabitListPage> {
       );
     });
   }
-
 
   // FRONT VIEW
   @override
@@ -596,7 +614,6 @@ class _HabitListPageState extends State<HabitListPage> {
             animationDuration: _animationDuration,
           ),
       ]),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.push(

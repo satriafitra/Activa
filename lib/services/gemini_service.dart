@@ -16,7 +16,7 @@ class GeminiService {
 
     final body = {
       'contents': [
-        // Prompt karakter Acto tetap di awal agar konsisten
+        
         {
           'role': 'user',
           'parts': [
@@ -27,7 +27,7 @@ class GeminiService {
             }
           ]
         },
-        // Tambahkan history secara bertahap
+        
         ...chatHistory,
       ]
     };

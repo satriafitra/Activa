@@ -1,6 +1,7 @@
 import 'package:active/components/sidebar.dart';
 import 'package:active/pages/chat_page.dart';
 import 'package:active/pages/sound_test.dart';
+import 'package:active/pages/streak.dart';
 import 'package:flutter/material.dart';
 import 'pages/habit_list/habit_list_page.dart'; // pastikan ini sesuai path
 import 'package:intl/date_symbol_data_local.dart';
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
       ),
-      home: ChatPage(),
+      home: StatsPage(),
     );
   }
 }

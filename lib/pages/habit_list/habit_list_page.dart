@@ -35,8 +35,8 @@ class _HabitListPageState extends State<HabitListPage> {
     final logs = await db.query('habit_logs');
 
     for (var log in logs) {
-      print(
-          '📋 LOG => id: ${log['id']}, habit_id: ${log['habit_id']}, date: "${log['date']}", qty: ${log['quantity_completed']}');
+      // print(
+      //     '📋 LOG => id: ${log['id']}, habit_id: ${log['habit_id']}, date: "${log['date']}", qty: ${log['quantity_completed']}');
     }
   }
 

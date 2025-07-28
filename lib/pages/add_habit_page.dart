@@ -154,6 +154,8 @@ class _AddHabitPageState extends State<AddHabitPage> {
         reminderTime: _hasReminder && _selectedReminderTime != null
             ? '${_selectedReminderTime!.hour.toString().padLeft(2, '0')}:${_selectedReminderTime!.minute.toString().padLeft(2, '0')}'
             : null,
+        currentStreak: widget.habit?.currentStreak ?? 0,
+        longestStreak: widget.habit?.longestStreak ?? 0,
       );
 
       print("📅 Selected days saat simpan: ${_selectedDays.join(',')}");
@@ -164,7 +166,6 @@ class _AddHabitPageState extends State<AddHabitPage> {
           final habitId = await DatabaseHelper.instance.insertHabit(habit);
 
           final db = await DatabaseHelper.instance.database;
-
 
           // Bersihkan habit_logs yang tanggalnya sudah lewat
           await db.delete(

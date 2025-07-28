@@ -20,6 +20,8 @@ class Habit {
   String unit;
   String? reminderTime; // format: "HH:mm"
   bool hasReminder;
+  int currentStreak;
+  int longestStreak;
 
   Habit({
     this.id,
@@ -28,6 +30,8 @@ class Habit {
     required this.color,
     required this.timeOfDay,
     required this.days,
+    required this.currentStreak,
+    required this.longestStreak,
     this.streak = 0,
     this.medal = 'bronze',
     this.quantity = 1,
@@ -52,6 +56,8 @@ class Habit {
       unit: map['unit'],
       hasReminder: map['has_reminder'] == 1,
       reminderTime: map['reminder_time'],
+      currentStreak: map['current_streak'] ?? 0,
+      longestStreak: map['longest_streak'] ?? 0,
     );
   }
 
@@ -70,6 +76,8 @@ class Habit {
       'unit': unit,
       'has_reminder': hasReminder ? 1 : 0,
       'reminder_time': reminderTime,
+      'current_streak': currentStreak,
+      'longest_streak': longestStreak,
     };
   }
 }

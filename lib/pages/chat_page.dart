@@ -13,6 +13,45 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  List<TextSpan> _parseFormattedText(String text) {
+    final spans = <TextSpan>[];
+    final regex = RegExp(r'(\*\*.*?\*\*|\*.*?\*|__.*?__)');
+
+    int start = 0;
+    for (final match in regex.allMatches(text)) {
+      if (match.start > start) {
+        spans.add(TextSpan(text: text.substring(start, match.start)));
+      }
+
+      final matchText = match.group(0)!;
+
+      if (matchText.startsWith('**')) {
+        spans.add(TextSpan(
+          text: matchText.substring(2, matchText.length - 2),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ));
+      } else if (matchText.startsWith('*')) {
+        spans.add(TextSpan(
+          text: matchText.substring(1, matchText.length - 1),
+          style: const TextStyle(fontStyle: FontStyle.italic),
+        ));
+      } else if (matchText.startsWith('__')) {
+        spans.add(TextSpan(
+          text: matchText.substring(2, matchText.length - 2),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ));
+      }
+
+      start = match.end;
+    }
+
+    if (start < text.length) {
+      spans.add(TextSpan(text: text.substring(start)));
+    }
+
+    return spans;
+  }
+
   final _svc = GeminiService();
   final _ctrl = TextEditingController();
   final _scroll = ScrollController();
@@ -200,12 +239,14 @@ class _ChatPageState extends State<ChatPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(3, (i) => _dot(i)),
                 )
-              : Text(
-                  text,
+              : RichText(
                   key: const ValueKey('text'),
-                  style: GoogleFonts.poppins(
-                    color: isUser ? Colors.white : Colors.black87,
-                    fontSize: 16,
+                  text: TextSpan(
+                    style: GoogleFonts.poppins(
+                      color: isUser ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                    ),
+                    children: _parseFormattedText(text),
                   ),
                 ),
         ),
@@ -214,7 +255,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _inputBar() => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Row(
           children: [
             Expanded(
@@ -224,9 +265,10 @@ class _ChatPageState extends State<ChatPage> {
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color:
+                          const Color.fromARGB(21, 0, 0, 0).withOpacity(0.05),
                       blurRadius: 8,
-                      offset: const Offset(0, 3),
+                      offset: const Offset(0, 1),
                     ),
                   ],
                 ),
@@ -237,7 +279,7 @@ class _ChatPageState extends State<ChatPage> {
                     hintText: 'Tulis pesan...',
                     hintStyle: GoogleFonts.poppins(color: Colors.grey.shade600),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                        horizontal: 24, vertical: 14),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
@@ -247,9 +289,20 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.send, color: Color(0xFF4e8cff)),
-              onPressed: _send,
+            GestureDetector(
+              onTap: _send,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF4e8cff), // Warna biru latar belakang
+                  shape: BoxShape.circle, // Bentuk bulat
+                ),
+                child: const Icon(
+                  Icons.send,
+                  color: Colors.white, // Ikon putih
+                  size: 20, // Ukuran ikon bisa diatur
+                ),
+              ),
             ),
           ],
         ),

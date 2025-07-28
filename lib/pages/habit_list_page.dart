@@ -94,11 +94,20 @@ class _HabitListPageState extends State<HabitListPage> {
     for (final habit in allHabits) {
       final days = habit.days.split(',').map((e) => e.trim()).toList();
 
-      // ⛔ Lewati habit kalau tanggal yang dipilih ada di masa lalu
-      if (selectedOnlyDate.isBefore(today)) continue;
-
-      if (days.contains(selectedDay)) {
-        filtered.add(habit); // ✅ hanya habit yang aktif dan bukan masa lalu
+      // Jika tanggal di masa lalu, hanya tampilkan habit yang memang punya log di tanggal itu
+      if (selectedOnlyDate.isBefore(today)) {
+        final hasLog = await dbHelper.isHabitExistInLogOnDate(
+          habit.id!,
+          DateFormat('yyyy-MM-dd').format(date),
+        );
+        if (hasLog) {
+          filtered.add(habit); // tampilkan sebagai history
+        }
+      } else {
+        // Tanggal hari ini atau ke depan → pakai jadwal hari (Senin, Selasa, dst)
+        if (days.contains(selectedDay)) {
+          filtered.add(habit);
+        }
       }
     }
 
@@ -651,7 +660,7 @@ class _HabitListPageState extends State<HabitListPage> {
                                 "Hi, ",
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
-                                  fontSize: 16,
+                                  fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -660,7 +669,7 @@ class _HabitListPageState extends State<HabitListPage> {
                                 _getGreeting(),
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
-                                  fontSize: 16,
+                                  fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

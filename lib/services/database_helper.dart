@@ -258,4 +258,15 @@ class DatabaseHelper {
     );
     return result.isNotEmpty;
   }
+
+  // logika filter masa lalu berdasar log
+  Future<bool> isHabitExistInLogOnDate(int habitId, String date) async {
+    final db = await database;
+    final result = await db.query(
+      'habit_logs',
+      where: 'habit_id = ? AND date = ?',
+      whereArgs: [habitId, date],
+    );
+    return result.isNotEmpty;
+  }
 }

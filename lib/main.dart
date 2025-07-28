@@ -2,7 +2,7 @@ import 'package:active/components/sidebar.dart';
 import 'package:active/pages/chat_page.dart';
 import 'package:active/pages/sound_test.dart';
 import 'package:flutter/material.dart';
-import 'pages/habit_list_page.dart'; // pastikan ini sesuai path
+import 'pages/habit_list/habit_list_page.dart'; // pastikan ini sesuai path
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

@@ -1,5 +1,5 @@
 import 'package:active/pages/chat_page.dart';
-import 'package:active/pages/habit_list_page.dart';
+import 'package:active/pages/habit_list/habit_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

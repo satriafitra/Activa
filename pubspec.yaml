@@ -46,6 +46,7 @@ flutter:
     - assets/images/day.png
     - assets/images/afternoon.png
     - assets/images/evening.png
+    - assets/images/no_habit.png
 
     # animations
     - assets/animations/confetti.json

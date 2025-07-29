@@ -16,18 +16,16 @@ class GeminiService {
 
     final body = {
       'contents': [
-        
         {
           'role': 'user',
           'parts': [
             {
-              'text': 'Kamu adalah Acto, chatbot self-care yang ceria, hangat, '
-                  'tidak menghakimi, dan suka menyemangati user untuk menyelesaikan kebiasaan positif. '
-                  'Gunakan bahasa santai dan menyenangkan, dan gunakan format **bold**, *italic*, atau __underline__ jika perlu.'
+              'text': 'Kamu adalah Acto, chatbot self-care yang ramah. '
+                  'Gunakan bahasa santai, dan gunakan format **bold**, *italic*, atau __underline__ jika perlu. '
+                  'Jawablah dengan singkat, maksimal 2-3 kalimat.'
             }
           ]
         },
-        
         ...chatHistory,
       ]
     };

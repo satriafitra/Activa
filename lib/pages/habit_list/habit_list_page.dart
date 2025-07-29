@@ -113,7 +113,7 @@ class _HabitListPageState extends State<HabitListPage> {
 
     // print('🟦 Jumlah habit aktif hari ini: ${todayHabits.length}');
     // print(
-        // '✅ Jumlah habit yang selesai: ${todayHabits.where((h) => h.isCompleted).length}');
+    // '✅ Jumlah habit yang selesai: ${todayHabits.where((h) => h.isCompleted).length}');
 
     final allCompleted = todayHabits.isNotEmpty &&
         todayHabits.every((habit) => habit.isCompleted == true);
@@ -323,6 +323,15 @@ class _HabitListPageState extends State<HabitListPage> {
   // FRONT VIEW
   @override
   Widget build(BuildContext context) {
+    final hasMorning =
+        habitsWithStatus.any((h) => h.habit.timeOfDay.toLowerCase() == 'pagi');
+    final hasAfternoon =
+        habitsWithStatus.any((h) => h.habit.timeOfDay.toLowerCase() == 'siang');
+    final hasEvening =
+        habitsWithStatus.any((h) => h.habit.timeOfDay.toLowerCase() == 'malam');
+
+    final hasAnyHabit = hasMorning || hasAfternoon || hasEvening;
+
     // Hitung total dan completed dari habitsWithStatus
     final totalTasks = habitsWithStatus.length;
     final completedTasks = habitsWithStatus
@@ -538,13 +547,36 @@ class _HabitListPageState extends State<HabitListPage> {
               ),
 
               const SizedBox(height: 20),
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (habitsWithStatus.any(
-                        (h) => h.habit.timeOfDay.toLowerCase() == 'pagi')) ...[
+                    if (!hasAnyHabit) ...[
+                      const SizedBox(height: 20),
+                      Center(
+                        child: Column(
+                          children: [
+                            Image.asset(
+                              'assets/images/no_habit.png',
+                              width: 200,
+                              fit: BoxFit.contain,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              "There’s no habit here~",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (hasMorning) ...[
                       Text(
                         "MORNING",
                         style: GoogleFonts.poppins(
@@ -560,8 +592,7 @@ class _HabitListPageState extends State<HabitListPage> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    if (habitsWithStatus.any(
-                        (h) => h.habit.timeOfDay.toLowerCase() == 'siang')) ...[
+                    if (hasAfternoon) ...[
                       Text(
                         "AFTERNOON",
                         style: GoogleFonts.poppins(
@@ -578,8 +609,7 @@ class _HabitListPageState extends State<HabitListPage> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    if (habitsWithStatus.any(
-                        (h) => h.habit.timeOfDay.toLowerCase() == 'malam')) ...[
+                    if (hasEvening) ...[
                       Text(
                         "EVENING",
                         style: GoogleFonts.poppins(

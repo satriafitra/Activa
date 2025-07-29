@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:active/pages/add_habit_page.dart';
+import 'package:active/pages/add_habit/add_habit_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class HabitDetailPage extends StatefulWidget {

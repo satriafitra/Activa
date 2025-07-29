@@ -11,10 +11,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:active/services/database_helper.dart';
 import 'package:active/models/habit.dart';
-import 'package:active/pages/add_habit_page.dart';
+import 'package:active/pages/add_habit/add_habit_page.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lottie/lottie.dart';
+
 
 import 'visual_feedback.dart';
 
@@ -297,7 +299,6 @@ class _HabitListPageState extends State<HabitListPage> {
       final habit = habitStatus.habit;
       final isCompleted = habitStatus.isCompleted;
       final quantity = habitStatus.quantityCompleted;
-
       final isLast = index == filteredHabits.length - 1;
       final nextHabitTime =
           !isLast ? filteredHabits[index + 1].habit.timeOfDay : null;
@@ -631,6 +632,8 @@ class _HabitListPageState extends State<HabitListPage> {
             ],
           ),
         ),
+
+        
 
         /// ⬇️ Ini Sidebar reusable yang kamu buat
         SidebarOverlay(

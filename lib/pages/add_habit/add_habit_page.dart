@@ -36,6 +36,16 @@ class _AddHabitPageState extends State<AddHabitPage> {
   List<String> _selectedDays = [];
 
   Future<bool> _saveHabit() async {
+    if (_selectedDays.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pilih minimal satu hari dulu ya 😊'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return false;
+    }
+
     if (_formKey.currentState!.validate()) {
       final habit = Habit(
         id: widget.habit?.id,
@@ -333,8 +343,8 @@ class _AddHabitPageState extends State<AddHabitPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title:
-            Text('Add habit', style: GoogleFonts.poppins(color: Colors.black, fontSize: 18)),
+        title: Text('Add habit',
+            style: GoogleFonts.poppins(color: Colors.black, fontSize: 18)),
         actions: [
           TextButton(
             onPressed: () async {
@@ -461,7 +471,8 @@ class _AddHabitPageState extends State<AddHabitPage> {
               value: _timeOfDay,
               decoration: InputDecoration(
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 18),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(18),
                   borderSide: BorderSide.none,
@@ -469,14 +480,13 @@ class _AddHabitPageState extends State<AddHabitPage> {
                 filled: true,
                 fillColor: const Color(0xFFF9F9F9),
               ),
-              
               style: GoogleFonts.poppins(color: Colors.black, fontSize: 16),
               hint: Text(
                 'Waktu pelaksanaan',
                 style: GoogleFonts.poppins(color: Colors.grey),
               ),
               dropdownStyleData: DropdownStyleData(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                padding: EdgeInsets.symmetric(vertical: 6),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
                   color: Colors.white,

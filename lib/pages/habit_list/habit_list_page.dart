@@ -1,6 +1,7 @@
 // ignore_for_file: unused_field, unused_element, unused_local_variable
 import 'package:active/components/one_time_task_card.dart';
 import 'package:active/models/HabitWithStatus.dart';
+import 'package:active/pages/add_habit/choose_habit.dart';
 import 'package:active/pages/habit_detail_page.dart';
 import 'package:active/components/sidebar.dart';
 import 'package:active/components/confetti_overlay.dart';
@@ -608,7 +609,7 @@ class _HabitListPageState extends State<HabitListPage> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    if (!hasAnyHabit) ...[
+                    if (!hasAnyHabit && !hasOneTimeTask) ...[
                       const SizedBox(height: 20),
                       Center(
                         child: Column(
@@ -705,7 +706,7 @@ class _HabitListPageState extends State<HabitListPage> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => AddHabitPage()),
+            MaterialPageRoute(builder: (_) => ChooseHabitTypePage()),
           );
           _loadHabitsForDate(selectedDate);
         },

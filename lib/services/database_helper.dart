@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:active/models/habit.dart';
+import 'package:active/services/one_time_task_helper.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -68,6 +69,8 @@ class DatabaseHelper {
       FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
     )
   ''');
+
+    await OneTimeTaskHelper.createTable(db);
   }
 
   // Habit Create

@@ -1,5 +1,5 @@
 // ignore_for_file: unused_field, unused_element, unused_local_variable
-
+import 'package:active/components/one_time_task_card.dart';
 import 'package:active/models/HabitWithStatus.dart';
 import 'package:active/pages/habit_detail_page.dart';
 import 'package:active/components/sidebar.dart';
@@ -7,6 +7,7 @@ import 'package:active/components/confetti_overlay.dart';
 import 'package:active/components/habit_card.dart';
 import 'package:active/pages/habit_list/habit_list_utils.dart';
 import 'package:active/pages/habit_list/habit_list_logic.dart';
+import 'package:active/services/one_time_task_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:active/services/database_helper.dart';
@@ -16,8 +17,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lottie/lottie.dart';
-
-
+import 'package:active/models/one_time_task.dart';
+import 'package:active/services/one_time_task_helper.dart';
 import 'visual_feedback.dart';
 
 class HabitListPage extends StatefulWidget {
@@ -173,11 +174,20 @@ class _HabitListPageState extends State<HabitListPage> {
     }
   }
 
+  Future<void> _loadOneTimeTasks() async {
+    final tasks = await OneTimeTaskHelper.getAll();
+    setState(() {
+      oneTimeTasks = tasks;
+    });
+  }
+
   late String _day;
 
   @override
   void initState() {
     super.initState();
+
+    _loadOneTimeTasks();
 
     dbHelper = DatabaseHelper.instance; // ✅ Inisialisasi helper DB
 
@@ -318,6 +328,33 @@ class _HabitListPageState extends State<HabitListPage> {
           });
         },
       );
+    });
+  }
+
+  List<OneTimeTask> oneTimeTasks = [];
+
+  List<Widget> _buildOneTimeTasksByDate(DateTime date) {
+    final tasksForDate = oneTimeTasks.where((task) {
+      return task.date == DateFormat('yyyy-MM-dd').format(date);
+    }).toList();
+
+    return tasksForDate.map((task) {
+      return OneTimeTaskCard(task: task); // buat widget card mirip habit
+    }).toList();
+  }
+
+  bool get hasOneTimeTask {
+    final today = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
+
+    return oneTimeTasks.any((task) {
+      final taskDate = DateTime.parse(task.date);
+      return taskDate.year == today.year &&
+          taskDate.month == today.month &&
+          taskDate.day == today.day;
     });
   }
 
@@ -554,6 +591,23 @@ class _HabitListPageState extends State<HabitListPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (hasOneTimeTask) ...[
+                      Text(
+                        "ONE-TIME TASK",
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: const Color.fromARGB(132, 0, 0, 0),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Column(
+                        key: ValueKey(
+                            'one-time-${selectedDate.toIso8601String()}'),
+                        children: _buildOneTimeTasksByDate(selectedDate),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                     if (!hasAnyHabit) ...[
                       const SizedBox(height: 20),
                       Center(
@@ -632,8 +686,6 @@ class _HabitListPageState extends State<HabitListPage> {
             ],
           ),
         ),
-
-        
 
         /// ⬇️ Ini Sidebar reusable yang kamu buat
         SidebarOverlay(

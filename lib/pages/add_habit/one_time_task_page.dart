@@ -1,210 +1,62 @@
-import 'package:active/pages/add_habit/add_habit_utils.dart';
-import 'package:active/pages/habit_list/habit_list_page.dart';
 import 'package:flutter/material.dart';
-import 'package:active/models/habit.dart';
-import 'package:active/services/database_helper.dart';
-import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:intl/intl.dart';
+import '../../models/one_time_task.dart';
+import '../../services/one_time_task_helper.dart';
+import 'package:active/pages/add_habit/add_habit_utils.dart';
 
-class AddHabitPage extends StatefulWidget {
-  final Habit? habit; // habit yang ingin diedit
-
-  AddHabitPage({this.habit});
+class OneTimeTaskPage extends StatefulWidget {
+  const OneTimeTaskPage({super.key});
 
   @override
-  _AddHabitPageState createState() => _AddHabitPageState();
+  State<OneTimeTaskPage> createState() => _OneTimeTaskPageState();
 }
 
-class _AddHabitPageState extends State<AddHabitPage> {
+class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
-  final TextEditingController _unitController = TextEditingController();
-  final List<String> _unitOptions = unitOptions;
-  final List<String> _days = kDays;
+  final TextEditingController _customUnitController = TextEditingController();
   final List<IconData> iconList = kHabitIcons;
 
+  DateTime _selectedDate = DateTime.now();
+
+  String _icon = Icons.local_drink.codePoint.toString();
+  String _color = Colors.blue.value.toString();
   String? _selectedUnit;
-  final TextEditingController _customUnitController = TextEditingController();
-
-  String _icon =
-      Icons.local_drink.codePoint.toString(); // default pakai codePoint
-
-  String _color = '0xFF42A5F5';
-  String _timeOfDay = 'Pagi';
-  List<String> _selectedDays = [];
-
-  Future<bool> _saveHabit() async {
-    if (_selectedDays.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Pilih minimal 1 hari'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return false;
-    }
-
-    if (_formKey.currentState!.validate()) {
-      final habit = Habit(
-        id: widget.habit?.id,
-        name: _nameController.text,
-        icon: _icon,
-        color: _color,
-        timeOfDay: _timeOfDay,
-        days: _selectedDays.join(','), // Misal: "1,3,5"
-        streak: widget.habit?.streak ?? 0,
-        medal: widget.habit?.medal ?? 'bronze',
-        quantity: int.parse(_quantityController.text),
-        progress: widget.habit?.progress ?? 0,
-        unit: _selectedUnit == 'Lainnya'
-            ? _customUnitController.text
-            : _selectedUnit ?? '',
-        hasReminder: _hasReminder,
-        reminderTime: _hasReminder && _selectedReminderTime != null
-            ? '${_selectedReminderTime!.hour.toString().padLeft(2, '0')}:${_selectedReminderTime!.minute.toString().padLeft(2, '0')}'
-            : null,
-        currentStreak: widget.habit?.currentStreak ?? 0,
-        longestStreak: widget.habit?.longestStreak ?? 0,
-      );
-
-      print("📅 Selected days saat simpan: ${_selectedDays.join(',')}");
-
-      try {
-        if (widget.habit == null) {
-          // 🔹 Simpan habit baru
-          final habitId = await DatabaseHelper.instance.insertHabit(habit);
-
-          final db = await DatabaseHelper.instance.database;
-
-          // Bersihkan habit_logs yang tanggalnya sudah lewat
-          await db.delete(
-            'habit_logs',
-            where: 'habit_id = ? AND date < ?',
-            whereArgs: [
-              habitId,
-              DateFormat('yyyy-MM-dd').format(DateTime.now())
-            ],
-          );
-
-          print("✅ Habit ditambahkan!");
-
-          // 🔹 Generate logs hanya untuk masa depan
-          final Map<String, int> dayNameToNumber = {
-            'Senin': 1,
-            'Selasa': 2,
-            'Rabu': 3,
-            'Kamis': 4,
-            'Jumat': 5,
-            'Sabtu': 6,
-            'Minggu': 7,
-          };
-
-          final repeatDays =
-              habit.dayList.map((e) => dayNameToNumber[e]!).toList();
-
-          print("🎯 Hari yang dipilih (angka): $repeatDays");
-
-          await DatabaseHelper.instance.generateHabitLogs(
-            habitId: habitId,
-            repeatDays: repeatDays,
-          );
-        } else {
-          await DatabaseHelper.instance.updateHabit(habit);
-          print("✅ Habit diupdate!");
-        }
-        return true;
-      } catch (e) {
-        print("❌ Gagal menyimpan: $e");
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
 
   bool _hasReminder = false;
   TimeOfDay? _selectedReminderTime;
 
-  void _showIconPicker() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        // Tentukan jumlah icon per halaman
-        const int iconsPerPage = 8;
-        int currentPage = 0;
+  final List<String> _unitOptions = [
+    'Gelas',
+    'Kali',
+    'Menit',
+    'Jam',
+    'Langkah',
+    'Lainnya'
+  ];
 
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            int totalPages = (iconList.length / iconsPerPage).ceil();
-            int start = currentPage * iconsPerPage;
-            int end = (start + iconsPerPage) > iconList.length
-                ? iconList.length
-                : start + iconsPerPage;
+  Future<void> _saveTask() async {
+    if (_formKey.currentState!.validate() && _selectedDate != null) {
+      final task = OneTimeTask(
+        name: _nameController.text,
+        icon: _icon,
+        color: _color,
+        date: DateFormat('yyyy-MM-dd').format(_selectedDate!),
+        quantity: int.parse(_quantityController.text),
+        unit: _selectedUnit == 'Lainnya'
+            ? _customUnitController.text
+            : _selectedUnit!,
+        hasReminder: _hasReminder,
+        reminderTime: _hasReminder && _selectedReminderTime != null
+            ? '${_selectedReminderTime!.hour.toString().padLeft(2, '0')}:${_selectedReminderTime!.minute.toString().padLeft(2, '0')}'
+            : null,
+      );
 
-            List<IconData> pageIcons = iconList.sublist(start, end);
-
-            return Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    alignment: WrapAlignment.center,
-                    children: pageIcons.map((iconData) {
-                      bool isSelected = _icon == iconData.codePoint.toString();
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _icon = iconData.codePoint.toString();
-                          });
-                          Navigator.pop(context);
-                        },
-                        child: CircleAvatar(
-                          radius: 28,
-                          backgroundColor: isSelected
-                              ? Color(int.parse(_color)).withOpacity(0.2)
-                              : Colors.grey[200],
-                          child: Icon(
-                            iconData,
-                            size: 24,
-                            color: isSelected
-                                ? Color(int.parse(_color))
-                                : Colors.black,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios),
-                        onPressed: currentPage > 0
-                            ? () => setModalState(() => currentPage--)
-                            : null,
-                      ),
-                      Text('${currentPage + 1} / $totalPages'),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_forward_ios),
-                        onPressed: currentPage < totalPages - 1
-                            ? () => setModalState(() => currentPage++)
-                            : null,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+      await OneTimeTaskHelper.insert(task);
+      Navigator.pop(context);
+    }
   }
 
   void _showColorPicker() {
@@ -299,69 +151,102 @@ class _AddHabitPageState extends State<AddHabitPage> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
+  void _showIconPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        // Tentukan jumlah icon per halaman
+        const int iconsPerPage = 8;
+        int currentPage = 0;
 
-    if (widget.habit != null) {
-      final habit = widget.habit!;
-      _nameController.text = habit.name;
-      _quantityController.text = habit.quantity.toString();
-      _unitController.text = habit.unit;
-      _icon = habit.icon;
-      _color = habit.color;
-      _timeOfDay = habit.timeOfDay;
-      _selectedDays = habit.days.split(',');
-      _selectedUnit =
-          _unitOptions.contains(habit.unit) ? habit.unit : 'Lainnya';
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            int totalPages = (iconList.length / iconsPerPage).ceil();
+            int start = currentPage * iconsPerPage;
+            int end = (start + iconsPerPage) > iconList.length
+                ? iconList.length
+                : start + iconsPerPage;
 
-      if (_selectedUnit == 'Lainnya') {
-        _customUnitController.text = habit.unit;
-      }
+            List<IconData> pageIcons = iconList.sublist(start, end);
 
-      // ⏰ Load reminder data
-      _hasReminder = habit.hasReminder;
-
-      if (habit.reminderTime != null) {
-        final parts = habit.reminderTime!.split(':');
-        if (parts.length == 2) {
-          final hour = int.tryParse(parts[0]);
-          final minute = int.tryParse(parts[1]);
-          if (hour != null && minute != null) {
-            _selectedReminderTime = TimeOfDay(hour: hour, minute: minute);
-          }
-        }
-      }
-    }
+            return Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    alignment: WrapAlignment.center,
+                    children: pageIcons.map((iconData) {
+                      bool isSelected = _icon == iconData.codePoint.toString();
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _icon = iconData.codePoint.toString();
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: CircleAvatar(
+                          radius: 28,
+                          backgroundColor: isSelected
+                              ? Color(int.parse(_color)).withOpacity(0.2)
+                              : Colors.grey[200],
+                          child: Icon(
+                            iconData,
+                            size: 24,
+                            color: isSelected
+                                ? Color(int.parse(_color))
+                                : Colors.black,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios),
+                        onPressed: currentPage > 0
+                            ? () => setModalState(() => currentPage--)
+                            : null,
+                      ),
+                      Text('${currentPage + 1} / $totalPages'),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward_ios),
+                        onPressed: currentPage < totalPages - 1
+                            ? () => setModalState(() => currentPage++)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text('Add habit',
-            style: GoogleFonts.poppins(color: Colors.black, fontSize: 18)),
+        title: Text('Create one-time task',
+            style: GoogleFonts.poppins(color: Colors.black)),
         actions: [
           TextButton(
-            onPressed: () async {
-              final success = await _saveHabit();
-              if (success) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => HabitListPage()),
-                  (route) => false,
-                );
-              }
-            },
-            child: Text('SAVE',
+            onPressed: _saveTask,
+            child: Text('Save',
                 style: GoogleFonts.poppins(
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold,
-                )),
+                    color: Colors.green, fontWeight: FontWeight.bold)),
           )
         ],
         leading: IconButton(
@@ -374,6 +259,7 @@ class _AddHabitPageState extends State<AddHabitPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // Nama task
             TextFormField(
               controller: _nameController,
               style: GoogleFonts.poppins(color: Color(0xFF7D7D7D)),
@@ -400,10 +286,9 @@ class _AddHabitPageState extends State<AddHabitPage> {
               validator: (value) =>
                   value!.isEmpty ? 'Masukkan nama habit' : null,
             ),
+            const SizedBox(height: 24),
 
-            const SizedBox(height: 26),
-
-            // Icon & Color Picker
+            // Icon & Color Picker (dummy UI placeholder)
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -466,88 +351,37 @@ class _AddHabitPageState extends State<AddHabitPage> {
               height: 28,
             ),
 
-            // Waktu pelaksanaan
-            DropdownButtonFormField2(
-              value: _timeOfDay,
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 18),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: const Color(0xFFF9F9F9),
-              ),
-              style: GoogleFonts.poppins(color: Colors.black, fontSize: 16),
-              hint: Text(
-                'Waktu pelaksanaan',
-                style: GoogleFonts.poppins(color: Colors.grey),
-              ),
-              dropdownStyleData: DropdownStyleData(
-                padding: EdgeInsets.symmetric(vertical: 6),
+            // Date Picker
+            GestureDetector(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) {
+                  setState(() => _selectedDate = picked);
+                }
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
                 decoration: BoxDecoration(
+                  color: const Color(0xFFf9f9f9),
                   borderRadius: BorderRadius.circular(18),
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
-                    ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: Colors.grey),
+                    const SizedBox(width: 12),
+                    Text(
+                      DateFormat('dd MMMM yyyy').format(_selectedDate),
+                      style: GoogleFonts.poppins(color: Colors.grey[700]),
+                    )
                   ],
                 ),
-                elevation: 3,
-                offset: const Offset(0, -4),
               ),
-              items: ['Pagi', 'Siang', 'Malam']
-                  .map((e) => DropdownMenuItem<String>(
-                        value: e,
-                        child: Text(e, style: GoogleFonts.poppins()),
-                      ))
-                  .toList(),
-              onChanged: (val) => setState(() => _timeOfDay = val!),
-            ),
-
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 2,
-              children: _days.map((day) {
-                final selected = _selectedDays.contains(day);
-                return ChoiceChip(
-                  label: Text(
-                    day,
-                    style: GoogleFonts.poppins(
-                        color: selected ? Colors.green : Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14),
-                  ),
-                  selected: selected,
-                  backgroundColor: Color.fromARGB(7, 0, 0, 0),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-
-                  selectedColor:
-                      Colors.green.withOpacity(0.15), // 🔸 Warna saat dipilih
-                  showCheckmark: false, // 🔸 Hilangkan centang
-                  side: BorderSide.none, // 🔸 Hilangkan outline border
-                  shape: RoundedRectangleBorder(
-                    // Optional: bikin sudut agak halus
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  onSelected: (value) {
-                    setState(() {
-                      if (value) {
-                        _selectedDays.add(day);
-                      } else {
-                        _selectedDays.remove(day);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
             ),
 
             const SizedBox(height: 28),
@@ -563,6 +397,7 @@ class _AddHabitPageState extends State<AddHabitPage> {
               height: 28,
             ),
 
+            // Quantity
             TextFormField(
               controller: _quantityController,
               keyboardType: TextInputType.number,
@@ -670,18 +505,15 @@ class _AddHabitPageState extends State<AddHabitPage> {
                           : Colors.grey[200],
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(
-                      'No reminder',
-                      style: GoogleFonts.poppins(
-                        color: !_hasReminder ? Colors.green : Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    child: Text('No reminder',
+                        style: GoogleFonts.poppins(
+                          color:
+                              !_hasReminder ? Colors.green : Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        )),
                   ),
                 ),
-                SizedBox(
-                  width: 12,
-                ),
+                SizedBox(width: 12,),
                 GestureDetector(
                   onTap: () => setState(() => _hasReminder = true),
                   child: Container(
@@ -693,13 +525,11 @@ class _AddHabitPageState extends State<AddHabitPage> {
                           : Colors.grey[200],
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(
-                      'Activate reminder',
-                      style: GoogleFonts.poppins(
-                        color: _hasReminder ? Colors.green : Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    child: Text('Activate reminder',
+                        style: GoogleFonts.poppins(
+                          color: _hasReminder ? Colors.green : Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        )),
                   ),
                 ),
               ],
@@ -710,8 +540,8 @@ class _AddHabitPageState extends State<AddHabitPage> {
               ListTile(
                 title: Text(
                   _selectedReminderTime != null
-                      ? "Waktu: ${_selectedReminderTime!.format(context)}"
-                      : "Pilih Waktu Reminder",
+                      ? 'Waktu: ${_selectedReminderTime!.format(context)}'
+                      : 'Pilih Waktu Reminder',
                   style: GoogleFonts.poppins(),
                 ),
                 trailing: const Icon(Icons.access_time),
@@ -726,7 +556,6 @@ class _AddHabitPageState extends State<AddHabitPage> {
                 },
               ),
             ],
-
             const SizedBox(height: 60),
           ],
         ),

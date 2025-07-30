@@ -1,8 +1,8 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 
 class NotificationHelper {
-  /// Jadwalkan notifikasi (mirip dengan zonedSchedule sebelumnya)
-  static Future<void> scheduleNotification({
+  // Panggil ini saat user menambahkan One-Time Task
+  static Future<void> scheduleOneTimeTaskNotification({
     required int id,
     required DateTime dateTime,
     required String title,
@@ -24,13 +24,13 @@ class NotificationHelper {
         minute: dateTime.minute,
         second: 0,
         millisecond: 0,
-        repeats: false,
+        preciseAlarm: true,
       ),
     );
   }
 
-  /// Batalkan notifikasi berdasarkan ID
-  static Future<void> cancelNotification(int id) async {
+  // Panggil ini kalau task diedit dan kita ingin membatalkan notifikasi lama
+  static Future<void> cancel(int id) async {
     await AwesomeNotifications().cancel(id);
   }
 }

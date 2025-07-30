@@ -1,3 +1,4 @@
+import 'package:active/services/notification_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -47,9 +48,10 @@ class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
       return;
     }
 
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() && _selectedDate != null) {
+      // Bangun task dari input user
       final task = OneTimeTask(
-        id: widget.task?.id, // Ini penting supaya update bisa dilakukan!
+        id: widget.task?.id, // jika null, berarti add mode
         name: _nameController.text,
         icon: _icon,
         color: _color,
@@ -64,12 +66,39 @@ class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
             : null,
       );
 
+      int taskId;
+
       if (widget.task != null) {
         // EDIT MODE
         await OneTimeTaskHelper.update(task);
+        taskId = task.id!;
+
+        // Cancel notifikasi lama dulu
+        await NotificationHelper.cancel(taskId);
       } else {
         // ADD MODE
-        await OneTimeTaskHelper.insert(task);
+        taskId = await OneTimeTaskHelper.insert(task);
+      }
+
+      // Atur notifikasi jika perlu
+      if (task.hasReminder && task.reminderTime != null) {
+        final parts = task.reminderTime!.split(':');
+        final reminderTime = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+          int.parse(parts[0]),
+          int.parse(parts[1]),
+        );
+
+        print('[✅ NOTIF] Reminder akan muncul pada: $reminderTime');
+
+        await NotificationHelper.scheduleOneTimeTaskNotification(
+          id: taskId,
+          dateTime: reminderTime,
+          title: 'Hai, waktunya tugasmu!😎',
+          body: '${task.name} udah nunggu nih. Yuk kerjain!',
+        );
       }
 
       Navigator.pop(context); // kembali ke halaman sebelumnya

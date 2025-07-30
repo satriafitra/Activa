@@ -23,7 +23,7 @@ class _NotifTestPageState extends State<NotifTestPage> {
 
   void _scheduleNotif() {
     final now = DateTime.now();
-    final schedule = DateTime(now.year, now.month, now.day, now.hour, now.minute, now.second + 5);
+    final schedule = DateTime(now.year, now.month, now.day, now.hour, now.minute, now.second + 1);
 
     AwesomeNotifications().createNotification(
       content: NotificationContent(
@@ -33,6 +33,7 @@ class _NotifTestPageState extends State<NotifTestPage> {
         body: 'Notifikasi ini muncul setelah 5 detik!',
         notificationLayout: NotificationLayout.Default,
       ),
+
       schedule: NotificationCalendar(
         year: schedule.year,
         month: schedule.month,

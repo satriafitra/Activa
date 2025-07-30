@@ -51,6 +51,11 @@ class OneTimeTaskHelper {
     return await db.delete(oneTimeTask, where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<void> deleteOneTimeTask(int id) async {
+    final db = await DatabaseHelper.instance.database;
+    await db.delete('one_time_tasks', where: 'id = ?', whereArgs: [id]);
+  }
+
   // Tandai one-time task sebagai selesai
   Future<void> markOneTimeTaskAsCompleted(int taskId) async {
     final db = await DatabaseHelper.instance.database;
@@ -80,7 +85,7 @@ class OneTimeTaskHelper {
 
     final List<Map<String, dynamic>> maps = await db.query(
       'one_time_tasks',
-      where: 'date = ? AND is_completed = 0',
+      where: 'date = ?', // ⬅️ hanya filter tanggal
       whereArgs: [date],
     );
 

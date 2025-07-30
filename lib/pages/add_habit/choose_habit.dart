@@ -4,7 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:active/pages/add_habit/add_habit_page.dart';
 
 class ChooseHabitTypePage extends StatelessWidget {
-  const ChooseHabitTypePage({super.key});
+
+  final VoidCallback onReload;
+
+  const ChooseHabitTypePage({super.key, required this.onReload});
 
   @override
   Widget build(BuildContext context) {
@@ -40,19 +43,26 @@ class ChooseHabitTypePage extends StatelessWidget {
             const SizedBox(height: 16),
             // One-time task
             GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const OneTimeTaskPage()),
-              ),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const OneTimeTaskPage()),
+                );
+
+                // Setelah kembali dari halaman tambah task, reload data
+                onReload(); // ganti dengan nama fungsi reload kamu
+              },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1),
+                      color:
+                          const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -80,14 +90,16 @@ class ChooseHabitTypePage extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => AddHabitPage()),
               ),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1),
+                      color:
+                          const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -126,7 +138,9 @@ class ChooseHabitTypePage extends StatelessWidget {
               subtitle: "Take a step in the\nright directions.",
               imagePath: "assets/images/trending1.png",
             ),
-            SizedBox(height: 12,),
+            SizedBox(
+              height: 12,
+            ),
             _buildCategoryCard(
               context,
               title: "Stay at home",

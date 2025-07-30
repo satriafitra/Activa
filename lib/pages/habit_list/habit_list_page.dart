@@ -712,8 +712,11 @@ class _HabitListPageState extends State<HabitListPage> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => ChooseHabitTypePage()),
+            MaterialPageRoute(
+              builder: (_) => ChooseHabitTypePage(onReload: _loadOneTimeTasks),
+            ),
           );
+
           _loadHabitsForDate(selectedDate);
         },
         backgroundColor: Colors.green,

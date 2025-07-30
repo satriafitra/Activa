@@ -6,7 +6,9 @@ import '../../services/one_time_task_helper.dart';
 import 'package:active/pages/add_habit/add_habit_utils.dart';
 
 class OneTimeTaskPage extends StatefulWidget {
-  const OneTimeTaskPage({super.key});
+  final OneTimeTask? task; // <--- tambahkan ini
+
+  const OneTimeTaskPage({super.key, this.task}); // <--- dan ini
 
   @override
   State<OneTimeTaskPage> createState() => _OneTimeTaskPageState();
@@ -38,15 +40,16 @@ class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
   ];
 
   Future<void> _saveTask() async {
-    if (_selectedReminderTime == null) {
+    if (_hasReminder && _selectedReminderTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Reminder wajib dipilih')),
+        const SnackBar(content: Text('Reminder wajib dipilih')),
       );
       return;
     }
 
-    if (_formKey.currentState!.validate() && _selectedDate != null) {
+    if (_formKey.currentState!.validate()) {
       final task = OneTimeTask(
+        id: widget.task?.id, // Ini penting supaya update bisa dilakukan!
         name: _nameController.text,
         icon: _icon,
         color: _color,
@@ -61,8 +64,15 @@ class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
             : null,
       );
 
-      await OneTimeTaskHelper.insert(task);
-      Navigator.pop(context);
+      if (widget.task != null) {
+        // EDIT MODE
+        await OneTimeTaskHelper.update(task);
+      } else {
+        // ADD MODE
+        await OneTimeTaskHelper.insert(task);
+      }
+
+      Navigator.pop(context); // kembali ke halaman sebelumnya
     }
   }
 
@@ -236,6 +246,27 @@ class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
         );
       },
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.task != null) {
+      _nameController.text = widget.task!.name;
+      _selectedDate = DateTime.parse(widget.task!.date);
+      _selectedReminderTime = widget.task!.reminderTime != null
+          ? TimeOfDay(
+              hour: int.parse(widget.task!.reminderTime!.split(":")[0]),
+              minute: int.parse(widget.task!.reminderTime!.split(":")[1]),
+            )
+          : null;
+      _quantityController.text = widget.task!.quantity?.toString() ?? '0';
+      _selectedUnit = widget.task!.unit;
+      _icon = widget.task!.icon;
+      _color = widget.task!.color;
+      _hasReminder = widget.task!.hasReminder;
+    }
   }
 
   @override

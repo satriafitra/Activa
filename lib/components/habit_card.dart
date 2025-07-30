@@ -83,34 +83,109 @@ class HabitCard extends StatelessWidget {
               children: isTodaySelected
                   ? isCompleted
                       ? [
-                          SlidableAction(
-                            onPressed: (_) async {
-                              await DatabaseHelper.instance.unmarkHabitAsCompleted(
-                                habit.id!,
-                                DateFormat('yyyy-MM-dd').format(selectedDate),
-                              );
-                              onReload();
-                            },
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                            icon: Icons.undo,
-                            label: 'Undo',
+                          Flexible(
+                            flex: 1,
+                            child: CustomSlidableAction(
+                              onPressed: (_) async {
+                                await DatabaseHelper.instance
+                                    .unmarkHabitAsCompleted(
+                                  habit.id!,
+                                  DateFormat('yyyy-MM-dd').format(selectedDate),
+                                );
+                                onReload();
+                              },
+                              backgroundColor: Colors.transparent,
+                              child: Container(
+                                width: 1000, // Ubah jika ingin lebih lebar
+                                margin: const EdgeInsets.only(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 12,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.orange.withOpacity(0.3),
+                                      offset: Offset(0, 0),
+                                      blurRadius: 15,
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.undo,
+                                        color: Colors.white, size: 20),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Undo',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         ]
                       : [
-                          SlidableAction(
-                            onPressed: (_) async {
-                              await DatabaseHelper.instance.markHabitAsCompleted(
-                                habit.id!,
-                                DateFormat('yyyy-MM-dd').format(selectedDate),
-                              );
-                              onConfettiCheck(true);
-                              onReload();
-                            },
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            icon: Icons.check,
-                            label: 'Selesai',
+                          Flexible(
+                            flex: 1,
+                            child: CustomSlidableAction(
+                              onPressed: (_) async {
+                                await DatabaseHelper.instance
+                                    .markHabitAsCompleted(
+                                  habit.id!,
+                                  DateFormat('yyyy-MM-dd').format(selectedDate),
+                                );
+                                onConfettiCheck(true);
+                                onReload();
+                              },
+                              backgroundColor: Colors
+                                  .transparent, // supaya kita kontrol lewat container
+                              child: Container(
+                                width: 1000, // atur lebar tombol di sini
+                                margin: const EdgeInsets.only(
+                                  bottom: 12,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.green.withOpacity(0.3),
+                                      offset: Offset(0, 4),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.check,
+                                        color: Colors.white, size: 20),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Selesai',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         ]
                   : [],
@@ -129,7 +204,8 @@ class HabitCard extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 600),
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
                   color: isInactiveDay
                       ? Colors.grey.shade200

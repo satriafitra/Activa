@@ -24,26 +24,25 @@ class OneTimeTaskCard extends StatelessWidget {
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
         children: [
-          if (!isCompleted)
-            SlidableAction(
+          Flexible(
+            flex: 1,
+            child: CustomSlidableAction(
               onPressed: (_) async {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     contentPadding: const EdgeInsets.all(20),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Lottie
                         SizedBox(
                           height: 150,
                           child: Lottie.asset('assets/animations/alert.json'),
                         ),
                         const SizedBox(height: 16),
-
-                        // Title
                         Text(
                           'Konfirmasi',
                           style: GoogleFonts.poppins(
@@ -52,8 +51,6 @@ class OneTimeTaskCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-
-                        // Content
                         Text(
                           'Apakah kamu yakin ingin menyelesaikan task ini?',
                           textAlign: TextAlign.center,
@@ -81,10 +78,7 @@ class OneTimeTaskCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text(
-                          'Selesai',
-                          style: GoogleFonts.poppins(),
-                        ),
+                        child: Text('Selesai', style: GoogleFonts.poppins()),
                       ),
                     ],
                   ),
@@ -96,23 +90,36 @@ class OneTimeTaskCard extends StatelessWidget {
                   onReload();
                 }
               },
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              icon: Icons.check,
-              label: 'Selesai',
-            )
-          else
-            SlidableAction(
-              onPressed: (_) async {
-                await OneTimeTaskHelper()
-                    .unmarkOneTimeTaskAsCompleted(task.id!);
-                onReload();
-              },
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              icon: Icons.undo,
-              label: 'Undo',
+              backgroundColor: Colors.transparent, // biar warna dari container
+              child: Container(
+                width: 300,
+                margin: const EdgeInsets.only(
+                  left: 0, // jarak antar tombol kalau ada
+                  right: 0, // jarak antar tombol
+                  bottom: 12, // ✅ ini jarak bawah
+                ),
+                padding: const EdgeInsets.all(0),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check, color: Colors.white, size: 20),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Selesai',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
+          )
         ],
       ),
       child: Container(

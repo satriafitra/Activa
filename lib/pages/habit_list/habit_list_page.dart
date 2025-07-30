@@ -17,7 +17,6 @@ import 'package:active/pages/add_habit/add_habit_page.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lottie/lottie.dart';
 import 'package:active/models/one_time_task.dart';
 import 'package:active/services/one_time_task_helper.dart';
 import 'visual_feedback.dart';
@@ -176,7 +175,9 @@ class _HabitListPageState extends State<HabitListPage> {
   }
 
   Future<void> _loadOneTimeTasks() async {
-    final tasks = await OneTimeTaskHelper.getAll();
+    final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+    final tasks =
+        await OneTimeTaskHelper().getOneTimeTasksByDate(formattedDate);
     setState(() {
       oneTimeTasks = tasks;
     });
@@ -340,7 +341,11 @@ class _HabitListPageState extends State<HabitListPage> {
     }).toList();
 
     return tasksForDate.map((task) {
-      return OneTimeTaskCard(task: task); // buat widget card mirip habit
+      return OneTimeTaskCard(
+        task: task,
+        onReload:
+            _loadOneTimeTasks, // <-- penting agar reload setelah selesai/undo
+      );
     }).toList();
   }
 
@@ -462,6 +467,7 @@ class _HabitListPageState extends State<HabitListPage> {
                         selectedDate = date;
                         _loadHabitsForDate(selectedDate);
                       });
+                      _loadOneTimeTasks(); // ⬅️ Tambahan ini
                     },
                     child: Column(
                       children: [

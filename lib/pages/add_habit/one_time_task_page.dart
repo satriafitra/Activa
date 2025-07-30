@@ -25,7 +25,7 @@ class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
   String _color = Colors.blue.value.toString();
   String? _selectedUnit;
 
-  bool _hasReminder = false;
+  bool _hasReminder = true;
   TimeOfDay? _selectedReminderTime;
 
   final List<String> _unitOptions = [
@@ -38,12 +38,19 @@ class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
   ];
 
   Future<void> _saveTask() async {
+    if (_selectedReminderTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Reminder wajib dipilih')),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate() && _selectedDate != null) {
       final task = OneTimeTask(
         name: _nameController.text,
         icon: _icon,
         color: _color,
-        date: DateFormat('yyyy-MM-dd').format(_selectedDate!),
+        date: DateFormat('yyyy-MM-dd').format(_selectedDate),
         quantity: int.parse(_quantityController.text),
         unit: _selectedUnit == 'Lainnya'
             ? _customUnitController.text
@@ -491,71 +498,48 @@ class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
             ),
 
             // Reminder toggle
+            // Wajib reminder, langsung tampil aktif
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: () => setState(() => _hasReminder = false),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: !_hasReminder
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text('No reminder',
-                        style: GoogleFonts.poppins(
-                          color:
-                              !_hasReminder ? Colors.green : Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                        )),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ),
-                SizedBox(width: 12,),
-                GestureDetector(
-                  onTap: () => setState(() => _hasReminder = true),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: _hasReminder
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(16),
+                  child: Text(
+                    'Activate reminder (required)',
+                    style: GoogleFonts.poppins(
+                      color: Colors.green,
+                      fontWeight: FontWeight.w500,
                     ),
-                    child: Text('Activate reminder',
-                        style: GoogleFonts.poppins(
-                          color: _hasReminder ? Colors.green : Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                        )),
                   ),
                 ),
               ],
             ),
 
-            if (_hasReminder) ...[
-              const SizedBox(height: 16),
-              ListTile(
-                title: Text(
-                  _selectedReminderTime != null
-                      ? 'Waktu: ${_selectedReminderTime!.format(context)}'
-                      : 'Pilih Waktu Reminder',
-                  style: GoogleFonts.poppins(),
-                ),
-                trailing: const Icon(Icons.access_time),
-                onTap: () async {
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.now(),
-                  );
-                  if (time != null) {
-                    setState(() => _selectedReminderTime = time);
-                  }
-                },
+            const SizedBox(height: 16),
+
+            ListTile(
+              title: Text(
+                _selectedReminderTime != null
+                    ? 'Waktu: ${_selectedReminderTime!.format(context)}'
+                    : 'Pilih Waktu Reminder',
+                style: GoogleFonts.poppins(),
               ),
-            ],
+              trailing: const Icon(Icons.access_time),
+              onTap: () async {
+                final time = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.now(),
+                );
+                if (time != null) {
+                  setState(() => _selectedReminderTime = time);
+                }
+              },
+            ),
+
             const SizedBox(height: 60),
           ],
         ),

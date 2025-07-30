@@ -8,6 +8,7 @@ class OneTimeTask {
   final String unit;
   final bool hasReminder;
   final String? reminderTime;
+  final int isCompleted;
 
   OneTimeTask({
     this.id,
@@ -19,6 +20,7 @@ class OneTimeTask {
     required this.unit,
     required this.hasReminder,
     this.reminderTime,
+    this.isCompleted = 0,
   });
 
   Map<String, dynamic> toMap() => {
@@ -31,6 +33,7 @@ class OneTimeTask {
         'unit': unit,
         'has_reminder': hasReminder ? 1 : 0,
         'reminder_time': reminderTime,
+        'is_completed' : isCompleted,
       };
 
   factory OneTimeTask.fromMap(Map<String, dynamic> map) => OneTimeTask(
@@ -43,5 +46,6 @@ class OneTimeTask {
         unit: map['unit'],
         hasReminder: map['has_reminder'] == 1,
         reminderTime: map['reminder_time'],
+        isCompleted: map['is_completed'] ?? 0,
       );
 }

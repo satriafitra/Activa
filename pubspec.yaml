@@ -58,6 +58,7 @@ flutter:
     - assets/animations/medal.json
     - assets/animations/bronze.json
     - assets/animations/acto.json
+    - assets/animations/alert.json
 
     # sounds
     - assets/sounds/success.wav

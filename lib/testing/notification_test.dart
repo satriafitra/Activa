@@ -23,17 +23,17 @@ class _NotifTestPageState extends State<NotifTestPage> {
 
   void _scheduleNotif() {
     final now = DateTime.now();
-    final schedule = DateTime(now.year, now.month, now.day, now.hour, now.minute, now.second + 1);
+    final schedule = DateTime(
+        now.year, now.month, now.day, now.hour, now.minute, now.second + 3);
 
     AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: 1,
         channelKey: 'task_channel',
-        title: 'Notifikasi Test 🎉',
-        body: 'Notifikasi ini muncul setelah 5 detik!',
+        title: 'Notifikasi dengan Suara 🎶',
+        body: 'Ini notifikasi pakai ringtone custom!',
         notificationLayout: NotificationLayout.Default,
       ),
-
       schedule: NotificationCalendar(
         year: schedule.year,
         month: schedule.month,

@@ -18,17 +18,18 @@ void main() async {
   print('[ENV] Loaded key: ${dotenv.env['GEMINI_API_KEY']}');
 
   // ✅ Inisialisasi Awesome Notifications
-  await AwesomeNotifications().initialize(
-    null, // gunakan default icon dari launcher
+  AwesomeNotifications().initialize(
+    null,
     [
       NotificationChannel(
         channelKey: 'task_channel',
-        channelName: 'Task Notifications',
-        channelDescription: 'Pengingat untuk task dan habit kamu',
-        defaultColor: const Color(0xFF9D50DD),
-        ledColor: Colors.white,
+        channelName: 'Task Reminder',
+        channelDescription: 'Reminder for your task',
+        defaultColor: Colors.orange,
         importance: NotificationImportance.High,
-        channelShowBadge: true,
+        playSound: true,
+        enableVibration: true,
+        soundSource: 'resource://raw/success', // TANPA .wav
       ),
     ],
     debug: true,

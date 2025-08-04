@@ -8,6 +8,22 @@ class NotificationHelper {
     required String title,
     required String body,
   }) async {
+    if (dateTime.isBefore(DateTime.now())) {
+      print(
+          '[❌ ERROR] Reminder "$title" tidak bisa diset di masa lalu: $dateTime');
+      return;
+    }
+    final schedule = NotificationCalendar(
+      year: dateTime.year,
+      month: dateTime.month,
+      day: dateTime.day,
+      hour: dateTime.hour,
+      minute: dateTime.minute,
+      second: dateTime.second,
+      millisecond: 0,
+      repeats: false,
+    );
+
     await AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: id,
@@ -15,17 +31,9 @@ class NotificationHelper {
         title: title,
         body: body,
         notificationLayout: NotificationLayout.Default,
+        // ❌ customSound: 'success', => sudah tidak perlu
       ),
-      schedule: NotificationCalendar(
-        year: dateTime.year,
-        month: dateTime.month,
-        day: dateTime.day,
-        hour: dateTime.hour,
-        minute: dateTime.minute,
-        second: 0,
-        millisecond: 0,
-        preciseAlarm: true,
-      ),
+      schedule: schedule,
     );
   }
 

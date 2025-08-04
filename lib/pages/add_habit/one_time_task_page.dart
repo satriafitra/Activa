@@ -96,7 +96,7 @@ class _OneTimeTaskPageState extends State<OneTimeTaskPage> {
         await NotificationHelper.scheduleOneTimeTaskNotification(
           id: taskId,
           dateTime: reminderTime,
-          title: 'Hai, waktunya tugasmu!😎',
+          title: 'Hai, waktunya tugasmu!🔥',
           body: '${task.name} udah nunggu nih. Yuk kerjain!',
         );
       }

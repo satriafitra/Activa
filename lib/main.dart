@@ -1,6 +1,7 @@
 import 'package:active/components/sidebar.dart';
 import 'package:active/pages/add_habit/one_time_task_page.dart';
 import 'package:active/pages/chat_page.dart';
+import 'package:active/pages/starter_page.dart';
 import 'package:active/testing/notification_test.dart';
 import 'package:active/testing/sound_test.dart';
 import 'package:active/pages/streak.dart';
@@ -10,14 +11,17 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
-  await dotenv.load(); // INI PENTING
+  await dotenv.load();
+
   print('[ENV] Loaded key: ${dotenv.env['GEMINI_API_KEY']}');
 
-  // ✅ Inisialisasi Awesome Notifications
+  // Inisialisasi notifikasi
   AwesomeNotifications().initialize(
     null,
     [
@@ -29,28 +33,34 @@ void main() async {
         importance: NotificationImportance.High,
         playSound: true,
         enableVibration: true,
-        soundSource: 'resource://raw/success', // TANPA .wav
+        soundSource: 'resource://raw/success',
       ),
     ],
     debug: true,
   );
 
-  // ✅ Minta izin notifikasi
+  // Minta izin
   bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
   if (!isAllowed) {
     AwesomeNotifications().requestPermissionToSendNotifications();
   }
 
-  runApp(const MyApp());
+  // 🔥 Cek apakah user sudah pernah buka app
+  final prefs = await SharedPreferences.getInstance();
+  final seenStarter = prefs.getBool('seen_starter') ?? false;
+
+  runApp(MyApp(seenStarterPage: seenStarter));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool seenStarterPage;
+
+  const MyApp({super.key, required this.seenStarterPage});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Activa',
+      title: 'Pactiva',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.light(
@@ -60,7 +70,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
       ),
-      home: HabitListPage(),
+      // ⬇️ arahkan ke StarterPage jika belum pernah buka
+      home: seenStarterPage ? HabitListPage() : const StarterPage(),
     );
   }
 }
+

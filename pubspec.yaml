@@ -53,6 +53,9 @@ flutter:
     - assets/images/trending2.png
     - assets/images/trending1.png
     - assets/images/stay.png
+    - assets/images/starter_background.png
+    - assets/images/starter_character.png
+    - assets/images/starter_character_full.png
 
     # animations
     - assets/animations/confetti.json

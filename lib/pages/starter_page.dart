@@ -1,60 +1,125 @@
-import 'package:active/pages/habit_list/habit_list_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:active/pages/habit_list/habit_list_page.dart';
 
-class StarterPage extends StatelessWidget {
+class StarterPage extends StatefulWidget {
   const StarterPage({super.key});
+
+  @override
+  State<StarterPage> createState() => _StarterPageState();
+}
+
+class _StarterPageState extends State<StarterPage> with TickerProviderStateMixin {
+  late AnimationController _slideInController;
+  late Animation<Offset> _slideInAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _slideInController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _slideInAnimation = Tween<Offset>(
+      begin: const Offset(0, 1), // dari bawah
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideInController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _slideInController.forward();
+  }
+
+  @override
+  void dispose() {
+    _slideInController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onStartPressed() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seenStarterPage', true);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => HabitListPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0E0E16),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset('assets/images/pactiva_logo.png', height: 120),
-            const SizedBox(height: 40),
-            const Text(
-              'Selamat datang di Pactiva 🌱',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+      body: Stack(
+        children: [
+          // Step 1: Starter background
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/starter_background.png',
+              fit: BoxFit.cover,
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Bangun kebiasaan baik dengan mudah dan konsisten. Siap memulai perubahanmu hari ini?',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool(
-                    'seen_starter', true); // ✅ sesuai yang dicek di main.dart
+          ),
 
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) =>
-                          HabitListPage()), // ganti dengan halamanmu
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30)),
-              ),
-              child: const Text('Mulai Sekarang'),
+          // Step 2: Foreground + text + button slide in
+          SlideTransition(
+            position: _slideInAnimation,
+            child: Stack(
+              children: [
+                // Character foreground
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/starter_character_full.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+
+                // Text + Button di bagian bawah layar
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'The best time to start is now!',
+                            style: GoogleFonts.poppins(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _onStartPressed,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              child: const Text(
+                                'LETS DO IT',
+                                style: TextStyle(color: Colors.green),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

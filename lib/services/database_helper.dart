@@ -300,6 +300,7 @@ class DatabaseHelper {
   }
 
 
+
   Future<void> updateGlobalStreak(DateTime selectedDate) async {
     final prefs = await SharedPreferences.getInstance();
     final todayStr = selectedDate.toIso8601String().substring(0, 10);

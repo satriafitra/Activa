@@ -15,6 +15,7 @@ class HabitCard extends StatelessWidget {
   final bool showLine;
   final VoidCallback onReload;
   final ValueChanged<bool> onConfettiCheck;
+  final VoidCallback? onCompleted;
 
   const HabitCard({
     super.key,
@@ -26,6 +27,7 @@ class HabitCard extends StatelessWidget {
     required this.showLine,
     required this.onReload,
     required this.onConfettiCheck,
+    this.onCompleted, 
   });
 
   @override
@@ -151,6 +153,8 @@ class HabitCard extends StatelessWidget {
 
                                 onConfettiCheck(true);
                                 onReload();
+
+                                if (onCompleted != null) onCompleted!(); // ✅ Tambahkan ini
                               },
                               backgroundColor: Colors
                                   .transparent, // supaya kita kontrol lewat container

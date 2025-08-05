@@ -33,7 +33,7 @@ void main() async {
         importance: NotificationImportance.High,
         playSound: true,
         enableVibration: true,
-        soundSource: 'resource://raw/success',
+        soundSource: 'resource://raw/notif',
       ),
     ],
     debug: true,

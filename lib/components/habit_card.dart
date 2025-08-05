@@ -145,6 +145,10 @@ class HabitCard extends StatelessWidget {
                                   habit.id!,
                                   DateFormat('yyyy-MM-dd').format(selectedDate),
                                 );
+
+                                await DatabaseHelper.instance
+                                    .updateGlobalStreak(selectedDate);
+
                                 onConfettiCheck(true);
                                 onReload();
                               },

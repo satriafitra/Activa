@@ -123,6 +123,19 @@ class DatabaseHelper {
     }
   }
 
+  Future<List<Habit>> getHabitsForDate(DateTime date) async {
+    final db = await database;
+
+    // Format tanggal untuk nanti dipakai cek log (kalau mau disesuaikan)
+    final dateString = date.toIso8601String().substring(0, 10);
+
+    // Untuk sekarang kita ambil semua habit aja
+    final result = await db.query(
+        'habits'); // Bisa tambahkan where jika kamu punya field active, dll.
+
+    return result.map((map) => Habit.fromMap(map)).toList();
+  }
+
   // ✅ Cek apakah habit sudah selesai di tanggal tertentu
   Future<bool> isHabitCompleted(int habitId, String date) async {
     final db = await database;
@@ -162,8 +175,7 @@ class DatabaseHelper {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    // ✅ Update streak hanya saat *baru* selesai
-    await updateStreak(habitId);
+    
   }
 
   // ✅ Cek apakah habit selesai di tanggal tertentu (dengan parameter DateTime)
@@ -327,6 +339,50 @@ class DatabaseHelper {
     print('📅 Hari ini: $todayStr');
     print('📈 Current streak sekarang: $current');
     print('🏆 Longest streak sekarang: $longest');
+  }
+
+  Future<void> updateGlobalStreak(DateTime selectedDate) async {
+    final prefs = await SharedPreferences.getInstance();
+    final todayStr = selectedDate.toIso8601String().substring(0, 10);
+    final lastStreakDate = prefs.getString('lastStreakDate');
+
+    if (lastStreakDate == todayStr) return;
+
+    final habitsToday =
+        await getHabitsForDate(selectedDate); // ✅ pakai internal method
+
+    if (habitsToday.isEmpty) return;
+
+    bool allCompleted = true;
+    for (final habit in habitsToday) {
+      final isCompleted = await isHabitCompletedOnDate(
+          habit.id!, selectedDate); // ✅ pakai internal method
+      if (!isCompleted) {
+        allCompleted = false;
+        break;
+      }
+    }
+
+    if (allCompleted) {
+      final yesterdayStr = selectedDate
+          .subtract(const Duration(days: 1))
+          .toIso8601String()
+          .substring(0, 10);
+
+      int current = prefs.getInt('currentStreak') ?? 0;
+      int longest = prefs.getInt('longestStreak') ?? 0;
+
+      current = (lastStreakDate == yesterdayStr) ? current + 1 : 1;
+      longest = current > longest ? current : longest;
+
+      await prefs.setInt('currentStreak', current);
+      await prefs.setInt('longestStreak', longest);
+      await prefs.setString('lastStreakDate', todayStr);
+
+      print("✅ Global streak updated!");
+      print("🔥 Current streak: $current");
+      print("🏆 Longest streak: $longest");
+    }
   }
 
   Future<void> checkAndResetStreaks() async {

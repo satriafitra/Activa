@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import '../models/habit.dart'; // ganti sesuai path model kamu
 import '../services/database_helper.dart'; // ganti sesuai path database kamu
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -33,38 +34,32 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Future<void> _loadOverallStats() async {
-    final db = await DatabaseHelper.instance;
-    final habits = await db.getAllHabits();
+    final prefs = await SharedPreferences.getInstance();
 
-    int totalCurrentStreak = 0;
-    int totalLongestStreak = 0;
-
-    for (var habit in habits) {
-      totalCurrentStreak += (habit.currentStreak ?? 0).toInt();
-      totalLongestStreak += (habit.longestStreak ?? 0).toInt();
-    }
+    final int globalCurrentStreak = prefs.getInt('currentStreak') ?? 0;
+    final int globalLongestStreak = prefs.getInt('longestStreak') ?? 0;
 
     // Logika penentuan medal dan needed streak
     String next = 'bronze';
     int needed = 0;
 
-    if (totalCurrentStreak < 7) {
+    if (globalCurrentStreak < 7) {
       next = 'bronze';
-      needed = 7 - totalCurrentStreak;
-    } else if (totalCurrentStreak < 14) {
+      needed = 7 - globalCurrentStreak;
+    } else if (globalCurrentStreak < 14) {
       next = 'silver';
-      needed = 14 - totalCurrentStreak;
-    } else if (totalCurrentStreak < 30) {
+      needed = 14 - globalCurrentStreak;
+    } else if (globalCurrentStreak < 30) {
       next = 'gold';
-      needed = 30 - totalCurrentStreak;
+      needed = 30 - globalCurrentStreak;
     } else {
       next = 'platinum';
-      needed = 50 - totalCurrentStreak;
+      needed = 50 - globalCurrentStreak;
     }
 
     setState(() {
-      currentStreak = totalCurrentStreak;
-      longestStreak = totalLongestStreak;
+      currentStreak = globalCurrentStreak;
+      longestStreak = globalLongestStreak;
       neededStreak = needed.clamp(0, 999);
       nextMedal = next;
     });

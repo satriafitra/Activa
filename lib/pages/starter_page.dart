@@ -42,7 +42,7 @@ class _StarterPageState extends State<StarterPage> with TickerProviderStateMixin
 
   Future<void> _onStartPressed() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('seenStarterPage', true);
+    await prefs.setBool('seen_starter', true);
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => HabitListPage()),

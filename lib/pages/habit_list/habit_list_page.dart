@@ -513,7 +513,7 @@ class _HabitListPageState extends State<HabitListPage> {
                                 isSelected ? Colors.green : Colors.transparent,
                             shape: BoxShape.circle,
                             border: isCompleted
-                                ? Border.all(color: Colors.green, width: 2)
+                                ? Border.all(color: Colors.green, width: 2.5)
                                 : null,
                           ),
                           child: Center(
@@ -532,9 +532,7 @@ class _HabitListPageState extends State<HabitListPage> {
                   );
                 }),
               ),
-
               const SizedBox(height: 16),
-
               Padding(
                 padding: const EdgeInsets.all(4.0),
                 child: Container(

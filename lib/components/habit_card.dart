@@ -27,7 +27,7 @@ class HabitCard extends StatelessWidget {
     required this.showLine,
     required this.onReload,
     required this.onConfettiCheck,
-    this.onCompleted, 
+    this.onCompleted,
   });
 
   @override
@@ -46,7 +46,10 @@ class HabitCard extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isCompleted ? Colors.green : Colors.white,
-                border: Border.all(color: Colors.green, width: 4),
+                border: isCompleted
+                    ? Border.all(color: Colors.green, width: 4)
+                    : Border.all(
+                        color: const Color.fromARGB(255, 196, 196, 196), width: 4)
               ),
               child: isCompleted
                   ? const Icon(Icons.check, size: 16, color: Colors.white)
@@ -154,7 +157,8 @@ class HabitCard extends StatelessWidget {
                                 onConfettiCheck(true);
                                 onReload();
 
-                                if (onCompleted != null) onCompleted!(); // ✅ Tambahkan ini
+                                if (onCompleted != null)
+                                  onCompleted!(); // ✅ Tambahkan ini
                               },
                               backgroundColor: Colors
                                   .transparent, // supaya kita kontrol lewat container

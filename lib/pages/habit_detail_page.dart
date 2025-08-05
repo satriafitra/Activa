@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:active/pages/add_habit/add_habit_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:active/services/notification_helper.dart';
 
 class HabitDetailPage extends StatefulWidget {
   final Habit habit;
@@ -54,6 +55,8 @@ class _HabitDetailPageState extends State<HabitDetailPage> {
 
   Future<void> _deleteHabit(int id) async {
     await DatabaseHelper.instance.deleteHabit(id);
+    await NotificationHelper.cancel(id);
+
   }
 
   void _toggleSidebar() {

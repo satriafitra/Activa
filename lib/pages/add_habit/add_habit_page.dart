@@ -6,6 +6,7 @@ import 'package:active/services/database_helper.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:active/services/notification_helper.dart';
 
 class AddHabitPage extends StatefulWidget {
   final Habit? habit; // habit yang ingin diedit
@@ -90,6 +91,21 @@ class _AddHabitPageState extends State<AddHabitPage> {
               DateFormat('yyyy-MM-dd').format(DateTime.now())
             ],
           );
+
+          if (habit.hasReminder && habit.reminderTime != null) {
+            final parts = habit.reminderTime!.split(':');
+            final reminderTime = TimeOfDay(
+              hour: int.parse(parts[0]),
+              minute: int.parse(parts[1]),
+            );
+
+            await NotificationHelper.scheduleHabitNotification(
+              id: habitId,
+              reminderTime: reminderTime,
+              title: 'Yuk selesaikan habit! 🔥',
+              body: '${habit.name} Udah nungguin nih..',
+            );
+          }
 
           print("✅ Habit ditambahkan!");
 

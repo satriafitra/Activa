@@ -29,6 +29,30 @@ class HabitListPage extends StatefulWidget {
 class _HabitListPageState extends State<HabitListPage> {
   late DatabaseHelper dbHelper;
 
+  List<DateTime> completedDates = [];
+
+  Future<void> _checkCompletedDatesInWeek() async {
+    final db = DatabaseHelper.instance;
+    final today = DateTime.now();
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+
+    List<DateTime> tempCompletedDates = [];
+
+    for (int i = 0; i < 7; i++) {
+      final date = monday.add(Duration(days: i));
+      final statuses = await loadHabitsForDate(date: date, dbHelper: db);
+
+      if (statuses.isNotEmpty &&
+          statuses.every((h) => h.isCompleted || h.habit.days.isEmpty)) {
+        tempCompletedDates.add(DateTime(date.year, date.month, date.day));
+      }
+    }
+
+    setState(() {
+      completedDates = tempCompletedDates;
+    });
+  }
+
   // realtime image
   final image = getTimeBasedBannerImage();
   final greeting = getGreeting();
@@ -76,6 +100,8 @@ class _HabitListPageState extends State<HabitListPage> {
       _completedTasks = completedTasks;
       _totalTasks = totalTasks;
     });
+
+    _checkCompletedDatesInWeek(); // Tambahan ini
 
     _checkAllHabitsCompleted();
     debugPrintHabitLogs();
@@ -201,6 +227,8 @@ class _HabitListPageState extends State<HabitListPage> {
     _dayName = getDayName(selectedDate.weekday); // Nama hari sesuai tanggal
 
     _loadHabitsForDate(selectedDate); // Load habits hari ini
+
+    _checkCompletedDatesInWeek();
   }
 
   Future<void> runStreakResetOncePerDay() async {
@@ -460,6 +488,11 @@ class _HabitListPageState extends State<HabitListPage> {
                       date.month == selectedDate.month &&
                       date.year == selectedDate.year;
 
+                  final isCompleted = completedDates.any((d) =>
+                      d.day == date.day &&
+                      d.month == date.month &&
+                      d.year == date.year);
+
                   return GestureDetector(
                     onTap: () {
                       print('🗓️ Tanggal diklik: $date');
@@ -479,6 +512,9 @@ class _HabitListPageState extends State<HabitListPage> {
                             color:
                                 isSelected ? Colors.green : Colors.transparent,
                             shape: BoxShape.circle,
+                            border: isCompleted
+                                ? Border.all(color: Colors.green, width: 2)
+                                : null,
                           ),
                           child: Center(
                             child: Text(

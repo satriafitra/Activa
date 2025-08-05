@@ -58,6 +58,7 @@ flutter:
     - assets/images/starter_background.png
     - assets/images/starter_character.png
     - assets/images/starter_character_full.png
+    - assets/images/healty.png
 
     # animations
     - assets/animations/confetti.json

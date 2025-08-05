@@ -147,6 +147,13 @@ class ChooseHabitTypePage extends StatelessWidget {
               subtitle: "Take a step in the\nright directions.",
               imagePath: "assets/images/stay.png",
             ),
+            SizedBox(height: 12,),
+            _buildCategoryCard(
+              context,
+              title: "Stay Healty",
+              subtitle: "Stay healty with the\nright directions.",
+              imagePath: "assets/images/healty.png",
+            ),
 
             const SizedBox(height: 24),
           ],

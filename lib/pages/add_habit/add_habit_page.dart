@@ -78,6 +78,9 @@ class _AddHabitPageState extends State<AddHabitPage> {
 
           final db = await DatabaseHelper.instance.database;
 
+          // 🔁 UNDO STREAK JIKA PERLU
+          await DatabaseHelper.instance.undoStreakIfNeeded(DateTime.now());
+
           // Bersihkan habit_logs yang tanggalnya sudah lewat
           await db.delete(
             'habit_logs',

@@ -27,6 +27,71 @@ class HabitListPage extends StatefulWidget {
 }
 
 class _HabitListPageState extends State<HabitListPage> {
+  int currentStreak = 0;
+  int longestStreak = 0;
+  String nextMedal = "bronze";
+  int neededStreak = 7;
+  String currentMedal = 'none';
+
+
+  Future<void> _loadOverallStats() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final int globalCurrentStreak = prefs.getInt('currentStreak') ?? 0;
+    final int globalLongestStreak = prefs.getInt('longestStreak') ?? 0;
+
+    String current = 'none';
+    String next = 'bronze';
+    int needed = 0;
+
+    if (globalCurrentStreak < 7) {
+      current = 'none';
+      next = 'bronze';
+      needed = 7 - globalCurrentStreak;
+    } else if (globalCurrentStreak < 14) {
+      current = 'bronze';
+      next = 'silver';
+      needed = 14 - globalCurrentStreak;
+    } else if (globalCurrentStreak < 30) {
+      current = 'silver';
+      next = 'gold';
+      needed = 30 - globalCurrentStreak;
+    } else if (globalCurrentStreak < 50) {
+      current = 'gold';
+      next = 'platinum';
+      needed = 50 - globalCurrentStreak;
+    } else {
+      current = 'platinum';
+      next = '-';
+      needed = 0;
+    }
+
+    setState(() {
+      currentStreak = globalCurrentStreak;
+      longestStreak = globalLongestStreak;
+      neededStreak = needed.clamp(0, 999);
+      nextMedal = next;
+      currentMedal = current;
+    });
+  }
+
+  double get progress => currentStreak / (currentStreak + neededStreak);
+
+  Color getMedalColor(String medal) {
+    switch (medal) {
+      case 'bronze':
+        return const Color(0xFFCD7F32);
+      case 'silver':
+        return const Color(0xFFC0C0C0);
+      case 'gold':
+        return const Color(0xFFFFD700);
+      case 'platinum':
+        return const Color(0xFF6A5ACD);
+      default:
+        return Colors.grey;
+    }
+  }
+
   late DatabaseHelper dbHelper;
 
   List<DateTime> completedDates = [];
@@ -214,6 +279,8 @@ class _HabitListPageState extends State<HabitListPage> {
   @override
   void initState() {
     super.initState();
+
+    _loadOverallStats();
 
     _loadOneTimeTasks();
 
@@ -440,7 +507,10 @@ class _HabitListPageState extends State<HabitListPage> {
                       ),
                     ),
                     Spacer(),
-                    Icon(Icons.emoji_events_outlined, color: Colors.brown),
+                    Icon(
+                      Icons.emoji_events_rounded,
+                      color: getMedalColor(currentMedal),
+                    ),
                     const SizedBox(width: 12),
                     Container(
                       width: 70,
@@ -451,10 +521,10 @@ class _HabitListPageState extends State<HabitListPage> {
                       ),
                       child: FractionallySizedBox(
                         alignment: Alignment.centerLeft,
-                        widthFactor: 0.4,
+                        widthFactor: progress.clamp(0.0, 1.0),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.green,
+                            color: getMedalColor(nextMedal),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),

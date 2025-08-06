@@ -1,7 +1,6 @@
 class Habit {
-  List<String> get dayList {
-    return days.split(',').map((e) => e.trim()).toList();
-  }
+  
+  List<String> get dayList => days.split(',').map((e) => e.trim()).toList();
 
   set dayList(List<String> newDays) {
     days = newDays.join(',');
@@ -40,6 +39,8 @@ class Habit {
     this.reminderTime,
     this.hasReminder = false,
   });
+
+  
 
   factory Habit.fromMap(Map<String, dynamic> map) {
     return Habit(

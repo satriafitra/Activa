@@ -74,15 +74,11 @@ class _AddHabitPageState extends State<AddHabitPage> {
 
       try {
         if (widget.habit == null) {
-          // 🔹 Simpan habit baru
           final habitId = await DatabaseHelper.instance.insertHabit(habit);
-
           final db = await DatabaseHelper.instance.database;
 
-          // 🔁 UNDO STREAK JIKA PERLU
           await DatabaseHelper.instance.undoStreakIfNeeded(DateTime.now());
 
-          // Bersihkan habit_logs yang tanggalnya sudah lewat
           await db.delete(
             'habit_logs',
             where: 'habit_id = ? AND date < ?',
@@ -92,24 +88,7 @@ class _AddHabitPageState extends State<AddHabitPage> {
             ],
           );
 
-          if (habit.hasReminder && habit.reminderTime != null) {
-            final parts = habit.reminderTime!.split(':');
-            final reminderTime = TimeOfDay(
-              hour: int.parse(parts[0]),
-              minute: int.parse(parts[1]),
-            );
-
-            await NotificationHelper.scheduleHabitNotification(
-              id: habitId,
-              reminderTime: reminderTime,
-              title: 'Yuk selesaikan habit! 🔥',
-              body: '${habit.name} Udah nungguin nih..',
-            );
-          }
-
-          print("✅ Habit ditambahkan!");
-
-          // 🔹 Generate logs hanya untuk masa depan
+          // 🟢 Pindahkan ke sini
           final Map<String, int> dayNameToNumber = {
             'Senin': 1,
             'Selasa': 2,
@@ -120,9 +99,30 @@ class _AddHabitPageState extends State<AddHabitPage> {
             'Minggu': 7,
           };
 
-          final repeatDays =
-              habit.dayList.map((e) => dayNameToNumber[e]!).toList();
+          final repeatDays = habit.days
+              .split(',')
+              .map((e) => dayNameToNumber[e.trim()] ?? 0)
+              .where((e) => e != 0)
+              .toList();
 
+          if (habit.hasReminder && habit.reminderTime != null) {
+            final reminderTimeParts = habit.reminderTime!.split(':');
+            final hour = int.parse(reminderTimeParts[0]);
+            final minute = int.parse(reminderTimeParts[1]);
+
+            final time = TimeOfDay(hour: hour, minute: minute);
+
+            await NotificationHelper.scheduleHabitReminderNotification(
+              id: habitId,
+              title: 'Habit Reminder',
+              body: 'Saatnya "${habit.name}" 💪',
+              reminderTime: time,
+              repeatDays: repeatDays,
+            );
+          }
+
+          print("✅ Habit ditambahkan!");
+          print("🗓️ habit.dayList: ${habit.dayList}");
           print("🎯 Hari yang dipilih (angka): $repeatDays");
 
           await DatabaseHelper.instance.generateHabitLogs(

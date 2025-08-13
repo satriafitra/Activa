@@ -499,7 +499,7 @@ class _HabitListPageState extends State<HabitListPage> {
                               selectedDate.month == DateTime.now().month &&
                               selectedDate.year == DateTime.now().year
                           ? 'Today'
-                          : DateFormat('EEEE, d MMMM', 'id_ID')
+                          : DateFormat('EEEE, d MMM', 'id_ID')
                               .format(selectedDate),
                       style: GoogleFonts.poppins(
                         fontSize: 18,

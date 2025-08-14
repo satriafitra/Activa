@@ -1,10 +1,12 @@
 import 'package:active/pages/add_habit/one_time_task_page.dart';
+import 'package:active/pages/list_category_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:active/pages/add_habit/add_habit_page.dart';
+import 'package:active/pages/habit_category_data.dart'; // pastikan path sesuai
+import 'package:active/models/habit_category.dart'; // model kategori
 
 class ChooseHabitTypePage extends StatelessWidget {
-
   final VoidCallback onReload;
 
   const ChooseHabitTypePage({super.key, required this.onReload});
@@ -132,27 +134,28 @@ class ChooseHabitTypePage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             // Kategori 1
-            _buildCategoryCard(
-              context,
-              title: "Trending habits",
-              subtitle: "Take a step in the\nright directions.",
-              imagePath: "assets/images/trending1.png",
-            ),
-            SizedBox(
-              height: 12,
-            ),
-            _buildCategoryCard(
-              context,
-              title: "Stay at home",
-              subtitle: "Take a step in the\nright directions.",
-              imagePath: "assets/images/stay.png",
-            ),
-            SizedBox(height: 12,),
-            _buildCategoryCard(
-              context,
-              title: "Stay Healty",
-              subtitle: "Stay healty with the\nright directions.",
-              imagePath: "assets/images/healty.png",
+            Column(
+              children: habitCategories.map((category) {
+                return Column(
+                  children: [
+                    _buildCategoryCard(
+                      context,
+                      title: category.title,
+                      subtitle: category.subtitle,
+                      imagePath: category.imagePath,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ListCategoryPage(category: category),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                );
+              }).toList(),
             ),
 
             const SizedBox(height: 24),
@@ -162,50 +165,56 @@ class ChooseHabitTypePage extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryCard(BuildContext context,
-      {required String title,
-      required String subtitle,
-      required String imagePath}) {
-    return Container(
-      width: double.infinity,
-      height: 110,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 6),
+  Widget _buildCategoryCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required String imagePath,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 110,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 6),
+            ),
+          ],
+          image: DecorationImage(
+            image: AssetImage(imagePath),
+            fit: BoxFit.cover,
           ),
-        ],
-        image: DecorationImage(
-          image: AssetImage(imagePath),
-          fit: BoxFit.cover,
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: Colors.black54,
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: Colors.black54,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 // lib/pages/list_category_page.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/icon_helper.dart';
 
 import '../models/habit_category.dart';
 import '../models/habit.dart';
@@ -86,14 +87,7 @@ class ListCategoryPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
-                  child: Image.asset(
-                    habit.icon,
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.check_circle_outline),
-                  ),
+                  child: buildIconFromString(habit.icon,),
                 ),
               ),
               title: Text(

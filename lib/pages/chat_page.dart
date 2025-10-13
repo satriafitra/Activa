@@ -257,6 +257,8 @@ class _ChatPageState extends State<ChatPage> {
   Widget _inputBar() => Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Row(
+          crossAxisAlignment:
+              CrossAxisAlignment.end, // penting biar sejajar bawah
           children: [
             Expanded(
               child: Container(
@@ -272,19 +274,33 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ],
                 ),
-                child: TextField(
-                  style: GoogleFonts.poppins(color: Colors.black87),
-                  controller: _ctrl,
-                  decoration: InputDecoration(
-                    hintText: 'Tulis pesan...',
-                    hintStyle: GoogleFonts.poppins(color: Colors.grey.shade600),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 14),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: 48,
+                    maxHeight: 150, // batas maksimal tinggi input
                   ),
-                  onSubmitted: (_) => _send(),
+                  child: Scrollbar(
+                    child: TextField(
+                      controller: _ctrl,
+                      style: GoogleFonts.poppins(color: Colors.black87),
+                      keyboardType: TextInputType.multiline,
+                      maxLines: null, // biar auto-expand
+                      minLines: 1, // mulai dari 1 baris
+                      decoration: InputDecoration(
+                        hintText: 'Tulis pesan...',
+                        hintStyle:
+                            GoogleFonts.poppins(color: Colors.grey.shade600),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                      onSubmitted: (_) => _send(),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -294,13 +310,13 @@ class _ChatPageState extends State<ChatPage> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF4e8cff), // Warna biru latar belakang
-                  shape: BoxShape.circle, // Bentuk bulat
+                  color: Color(0xFF4e8cff),
+                  shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.send,
-                  color: Colors.white, // Ikon putih
-                  size: 20, // Ukuran ikon bisa diatur
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
             ),

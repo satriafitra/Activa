@@ -1,4 +1,5 @@
-// lib/data/habit_category_data.dart
+import 'package:flutter/material.dart';
+
 import '../models/habit.dart';
 import '../models/habit_category.dart';
 
@@ -10,7 +11,7 @@ final List<HabitCategory> habitCategories = [
     habits: [
       Habit(
         name: "Drink Water",
-        icon: "assets/icons/water.png",
+        icon: Icons.local_drink.codePoint.toString(),
         color: "#B3E5FC",
         timeOfDay: "morning",
         days: "Mon,Tue,Wed,Thu,Fri,Sat,Sun",

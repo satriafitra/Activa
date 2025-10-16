@@ -72,7 +72,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
       ),
       // ⬇️ arahkan ke StarterPage jika belum pernah buka
-      home: seenStarterPage ? ActoChatPage() : const StarterPage(),
+      home: seenStarterPage ? ActoVoicePage() : const StarterPage(),
     );
   }
 }

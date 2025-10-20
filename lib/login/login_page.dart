@@ -1,15 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'curved_green_shape.dart'; 
+import 'curved_green_shape.dart';
 
-class SignInPage extends StatelessWidget {
+class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
 
-  // Konstanta Warna Utama
-  static const Color primaryColor = Color.fromARGB(255, 54, 71, 95); 
-  static const Color accentColor = Color(0xFF4CAE60); 
-  static const Color inputFillColor = Color(0xFFF3F6F9); 
+  @override
+  State<SignInPage> createState() => _SignInPageState();
+}
 
+class _SignInPageState extends State<SignInPage> {
+  // Controller untuk input
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // Variabel untuk alert
+  bool _showAlert = false;
+  bool _isSuccess = false;
+  String _alertMessage = '';
+
+  // Warna Utama
+  static const Color primaryColor = Color.fromARGB(255, 54, 71, 95);
+  static const Color accentColor = Color(0xFF4CAE60);
+  static const Color inputFillColor = Color(0xFFF3F6F9);
+
+  // Style Text
   TextStyle poppinsStyle({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w400,
@@ -20,6 +35,36 @@ class SignInPage extends StatelessWidget {
       fontWeight: fontWeight,
       color: color,
     );
+  }
+
+  // Fungsi Dummy Login
+  void _login() {
+    String username = _usernameController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (username == "pauzan" && password == "123") {
+      _showCustomAlert(true, "Login Berhasil! Selamat datang, $username 👋");
+    } else {
+      _showCustomAlert(false, "Username atau password salah ❌");
+    }
+  }
+
+  // Fungsi Menampilkan Alert
+  void _showCustomAlert(bool success, String message) {
+    setState(() {
+      _showAlert = true;
+      _isSuccess = success;
+      _alertMessage = message;
+    });
+
+    // Hilangkan alert setelah 3 detik
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showAlert = false;
+        });
+      }
+    });
   }
 
   @override
@@ -40,7 +85,7 @@ class SignInPage extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: poppinsStyle(
                       fontSize: 25,
-                      fontWeight: FontWeight.w600, 
+                      fontWeight: FontWeight.w600,
                       color: primaryColor,
                     ),
                   ),
@@ -50,21 +95,23 @@ class SignInPage extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: poppinsStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w400, 
+                      fontWeight: FontWeight.w400,
                       color: Colors.grey,
                     ),
                   ),
                   const SizedBox(height: 40),
 
                   _buildInputField(
-                    context, 
+                    context,
+                    controller: _usernameController,
                     hintText: 'username',
                     icon: Icons.person_outline,
                   ),
                   const SizedBox(height: 20),
 
                   _buildInputField(
-                    context, 
+                    context,
+                    controller: _passwordController,
                     hintText: 'password',
                     icon: Icons.lock_outline,
                     isPassword: true,
@@ -87,7 +134,7 @@ class SignInPage extends StatelessWidget {
                   const SizedBox(height: 60),
 
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       shape: RoundedRectangleBorder(
@@ -143,6 +190,59 @@ class SignInPage extends StatelessWidget {
             alignment: Alignment.bottomCenter,
             child: CurvedGreenShape(),
           ),
+
+          // ALERT DI BAGIAN ATAS
+          if (_showAlert)
+            Positioned(
+              top: 40,
+              left: 20,
+              right: 20,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _isSuccess
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFFF5252),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isSuccess ? Icons.check_circle : Icons.error_outline,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _alertMessage,
+                        style: poppinsStyle(
+                          fontSize: 15,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => setState(() => _showAlert = false),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white70,
+                        size: 22,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -150,6 +250,7 @@ class SignInPage extends StatelessWidget {
 
   Widget _buildInputField(
     BuildContext context, {
+    required TextEditingController controller,
     required String hintText,
     required IconData icon,
     bool isPassword = false,
@@ -161,6 +262,7 @@ class SignInPage extends StatelessWidget {
         border: Border.all(color: Colors.transparent),
       ),
       child: TextField(
+        controller: controller,
         obscureText: isPassword,
         style: poppinsStyle(
           fontWeight: FontWeight.w500,
@@ -174,10 +276,12 @@ class SignInPage extends StatelessWidget {
           ),
           prefixIcon: Icon(icon, color: primaryColor.withOpacity(0.6)),
           suffixIcon: isPassword
-              ? Icon(Icons.visibility_off_outlined, color: primaryColor.withOpacity(0.6))
+              ? Icon(Icons.visibility_off_outlined,
+                  color: primaryColor.withOpacity(0.6))
               : null,
-          border: InputBorder.none, 
-          contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
         ),
       ),
     );

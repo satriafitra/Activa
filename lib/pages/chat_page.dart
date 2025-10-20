@@ -2,8 +2,9 @@ import 'package:active/services/gemini_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:active/components/sidebar.dart'; // pastikan import ini
+import 'package:active/components/sidebar.dart';
 import 'package:lottie/lottie.dart';
+import 'package:active/testing/acto_chat_page.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -13,6 +14,85 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  final _svc = GeminiService();
+  final _ctrl = TextEditingController();
+  final _scroll = ScrollController();
+  final _messages = <_Msg>[];
+  bool _isTyping = false;
+  bool _isSidebarOpen = false;
+  bool _hasText = false; // 👈 Tambahan: deteksi apakah user mengetik
+
+  @override
+  void initState() {
+    super.initState();
+    _simulateTypingMessages();
+
+    // 👇 Tambahkan listener untuk deteksi isi TextField
+    _ctrl.addListener(() {
+      final hasText = _ctrl.text.trim().isNotEmpty;
+      if (hasText != _hasText) {
+        setState(() => _hasText = hasText);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _toggleSidebar() {
+    setState(() => _isSidebarOpen = !_isSidebarOpen);
+  }
+
+  Future<void> _simulateTypingMessages() async {
+    setState(() => _isTyping = true);
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() {
+      _messages.add(_Msg('Hai!', Role.bot));
+    });
+    await Future.delayed(const Duration(seconds: 1));
+    _scrollJump();
+    setState(() {
+      _messages.add(_Msg('Ada yang bisa aku bantu? :D', Role.bot));
+      _isTyping = false;
+    });
+    _scrollJump();
+  }
+
+  Future<void> _send() async {
+    final prompt = _ctrl.text.trim();
+    if (prompt.isEmpty || _isTyping) return;
+    setState(() {
+      _messages.add(_Msg(prompt, Role.user));
+      _isTyping = true;
+      _ctrl.clear();
+      _hasText = false;
+    });
+
+    _scrollJump();
+
+    try {
+      final reply = await _svc.sendPrompt(prompt);
+      setState(() {
+        _messages.add(_Msg(reply, Role.bot));
+      });
+    } catch (e) {
+      setState(() {
+        _messages.add(_Msg('⚠️ $e', Role.bot));
+      });
+    } finally {
+      setState(() => _isTyping = false);
+      _scrollJump();
+    }
+  }
+
+  void _scrollJump() => Future.delayed(
+        const Duration(milliseconds: 100),
+        () => _scroll.jumpTo(_scroll.position.maxScrollExtent),
+      );
+
   List<TextSpan> _parseFormattedText(String text) {
     final spans = <TextSpan>[];
     final regex = RegExp(r'(\*\*.*?\*\*|\*.*?\*|__.*?__)');
@@ -51,71 +131,6 @@ class _ChatPageState extends State<ChatPage> {
 
     return spans;
   }
-
-  final _svc = GeminiService();
-  final _ctrl = TextEditingController();
-  final _scroll = ScrollController();
-  final _messages = <_Msg>[];
-  bool _isTyping = false;
-  bool _isSidebarOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _simulateTypingMessages();
-  }
-
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarOpen = !_isSidebarOpen;
-    });
-  }
-
-  Future<void> _simulateTypingMessages() async {
-    setState(() => _isTyping = true);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      _messages.add(_Msg('Hai!', Role.bot));
-    });
-    await Future.delayed(const Duration(seconds: 1));
-    _scrollJump();
-    setState(() {
-      _messages.add(_Msg('Ada yang bisa aku bantu? :D', Role.bot));
-      _isTyping = false;
-    });
-    _scrollJump();
-  }
-
-  Future<void> _send() async {
-    final prompt = _ctrl.text.trim();
-    if (prompt.isEmpty || _isTyping) return;
-    setState(() {
-      _messages.add(_Msg(prompt, Role.user));
-      _isTyping = true;
-      _ctrl.clear();
-    });
-
-    _scrollJump();
-
-    try {
-      final reply = await _svc.sendPrompt(prompt);
-      setState(() {
-        _messages.add(_Msg(reply, Role.bot));
-      });
-    } catch (e) {
-      setState(() {
-        _messages.add(_Msg('⚠️ $e', Role.bot));
-      });
-    } finally {
-      setState(() => _isTyping = false);
-      _scrollJump();
-    }
-  }
-
-  void _scrollJump() => Future.delayed(
-        const Duration(milliseconds: 100),
-        () => _scroll.jumpTo(_scroll.position.maxScrollExtent),
-      );
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +208,7 @@ class _ChatPageState extends State<ChatPage> {
                         },
                       ),
                     ),
-                    _inputBar(),
+                    _inputBar(context),
                   ],
                 ),
               ),
@@ -254,11 +269,11 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _inputBar() => Padding(
+  // 🔹 MODIFIKASI DI SINI
+  Widget _inputBar(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Row(
-          crossAxisAlignment:
-              CrossAxisAlignment.end, // penting biar sejajar bawah
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
               child: Container(
@@ -277,15 +292,15 @@ class _ChatPageState extends State<ChatPage> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     minHeight: 48,
-                    maxHeight: 150, // batas maksimal tinggi input
+                    maxHeight: 150,
                   ),
                   child: Scrollbar(
                     child: TextField(
                       controller: _ctrl,
                       style: GoogleFonts.poppins(color: Colors.black87),
                       keyboardType: TextInputType.multiline,
-                      maxLines: null, // biar auto-expand
-                      minLines: 1, // mulai dari 1 baris
+                      maxLines: null,
+                      minLines: 1,
                       decoration: InputDecoration(
                         hintText: 'Tulis pesan...',
                         hintStyle:
@@ -295,8 +310,6 @@ class _ChatPageState extends State<ChatPage> {
                           vertical: 14,
                         ),
                         border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
                       ),
                       onSubmitted: (_) => _send(),
                     ),
@@ -306,15 +319,24 @@ class _ChatPageState extends State<ChatPage> {
             ),
             const SizedBox(width: 8),
             GestureDetector(
-              onTap: _send,
+              onTap: _hasText
+                  ? _send
+                  : () {
+                      // 👇 Navigasi ke ActoVoiceMode
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ActoVoicePage()),
+                      );
+                    },
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: const BoxDecoration(
                   color: Color(0xFF4e8cff),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.send,
+                child: Icon(
+                  _hasText ? Icons.send : Icons.mic, // 🔄 Icon berubah dinamis
                   color: Colors.white,
                   size: 20,
                 ),
@@ -340,7 +362,6 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ),
       ),
-      onEnd: () {},
     );
   }
 }

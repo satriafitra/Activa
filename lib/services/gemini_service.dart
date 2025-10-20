@@ -5,8 +5,16 @@ import 'package:active/controllers/api_constants.dart';
 class GeminiService {
   final List<Map<String, dynamic>> chatHistory = [];
 
+  Future<String> generateResponse(String prompt) async {
+    try {
+      final response = await sendPrompt(prompt);
+      return response;
+    } catch (e) {
+      return 'Terjadi kesalahan: $e';
+    }
+  }
+
   Future<String> sendPrompt(String prompt) async {
-    // Tambahkan pesan user ke riwayat obrolan
     chatHistory.add({
       'role': 'user',
       'parts': [
@@ -48,7 +56,6 @@ class GeminiService {
     final reply = data['candidates']?[0]?['content']?['parts']?[0]?['text'];
     if (reply == null || reply.isEmpty) throw Exception('Empty response');
 
-    // Tambahkan respons Acto ke riwayat obrolan
     chatHistory.add({
       'role': 'model',
       'parts': [

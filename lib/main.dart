@@ -4,6 +4,7 @@ import 'package:active/pages/add_habit/one_time_task_page.dart';
 import 'package:active/pages/chat_page.dart';
 import 'package:active/pages/starter_page.dart';
 import 'package:active/testing/notification_test.dart';
+import 'package:active/testing/acto_chat_page.dart';
 import 'package:active/testing/sound_test.dart';
 import 'package:active/pages/streak.dart';
 import 'package:flutter/material.dart';

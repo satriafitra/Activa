@@ -1,4 +1,5 @@
 import 'package:active/components/sidebar.dart';
+import 'package:active/login/login_page.dart';
 import 'package:active/pages/add_habit/one_time_task_page.dart';
 import 'package:active/pages/chat_page.dart';
 import 'package:active/pages/starter_page.dart';
@@ -71,7 +72,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
       ),
       // ⬇️ arahkan ke StarterPage jika belum pernah buka
-      home: seenStarterPage ? HabitListPage() : const StarterPage(),
+      home: seenStarterPage ? HabitListPage() : const SignInPage(),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:active/pages/chat_page.dart';
+import 'package:active/pages/settings/settings_page.dart';
 import 'package:active/pages/streak.dart';
 import 'package:active/pages/habit_list/habit_list_page.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +61,7 @@ class SidebarOverlay extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Text(
-                          "One step ahead dude!",
+                          "Welcome back, Pauzan!",
                           style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontSize: 16,
@@ -70,7 +71,7 @@ class SidebarOverlay extends StatelessWidget {
                         ),
                         SizedBox(height: 24),
                         Text(
-                          "1 days",
+                          "0 days",
                           style: GoogleFonts.poppins(
                             fontSize: 28,
                             color: Colors.white,
@@ -148,6 +149,11 @@ class _SidebarMenuItem extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => StatsPage()),
+            );
+          } else if (title == "Settings") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => SettingsPage()),
             );
           }
           // Tambahkan else if untuk navigasi menu lainnya

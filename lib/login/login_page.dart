@@ -1,6 +1,6 @@
+import 'package:active/pages/habit_list/habit_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'curved_green_shape.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -10,21 +10,17 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
-  // Controller untuk input
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // Variabel untuk alert
   bool _showAlert = false;
   bool _isSuccess = false;
   String _alertMessage = '';
 
-  // Warna Utama
-  static const Color primaryColor = Color.fromARGB(255, 54, 71, 95);
+  static const Color primaryColor = Color(0xFF36475F);
   static const Color accentColor = Color(0xFF4CAE60);
   static const Color inputFillColor = Color(0xFFF3F6F9);
 
-  // Style Text
   TextStyle poppinsStyle({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w400,
@@ -37,33 +33,33 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  // Fungsi Dummy Login
   void _login() {
     String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
 
     if (username == "pauzan" && password == "123") {
       _showCustomAlert(true, "Login Berhasil! Selamat datang, $username 👋");
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HabitListPage()),
+          );
+        }
+      });
     } else {
       _showCustomAlert(false, "Username atau password salah ❌");
     }
   }
 
-  // Fungsi Menampilkan Alert
   void _showCustomAlert(bool success, String message) {
     setState(() {
       _showAlert = true;
       _isSuccess = success;
       _alertMessage = message;
     });
-
-    // Hilangkan alert setelah 3 detik
     Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _showAlert = false;
-        });
-      }
+      if (mounted) setState(() => _showAlert = false);
     });
   }
 
@@ -73,125 +69,171 @@ class _SignInPageState extends State<SignInPage> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Center(
+          // HERO IMAGE ATAS
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Image.asset(
+              'assets/images/login_hero.png', // ubah ke path gambar kamu
+              fit: BoxFit.cover,
+              height: MediaQuery.of(context).size.height * 0.35,
+            ),
+          ),
+
+          // FORM CARD
+          Align(
+            alignment: Alignment.bottomCenter,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Text(
-                    'Sign In',
-                    textAlign: TextAlign.center,
-                    style: poppinsStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.w600,
-                      color: primaryColor,
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(top: 230),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 30),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 15,
+                      offset: Offset(0, -3),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'This is the desc of sign in lorem ipsum',
-                    textAlign: TextAlign.center,
-                    style: poppinsStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-
-                  _buildInputField(
-                    context,
-                    controller: _usernameController,
-                    hintText: 'username',
-                    icon: Icons.person_outline,
-                  ),
-                  const SizedBox(height: 20),
-
-                  _buildInputField(
-                    context,
-                    controller: _passwordController,
-                    hintText: 'password',
-                    icon: Icons.lock_outline,
-                    isPassword: true,
-                  ),
-                  const SizedBox(height: 10),
-
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        'Forgot password?',
-                        style: poppinsStyle(
-                          color: accentColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 60),
-
-                  ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 22),
-                    ),
-                    child: Text(
-                      'Login',
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Sign In',
+                      textAlign: TextAlign.center,
                       style: poppinsStyle(
-                        fontSize: 18,
+                        fontSize: 24,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 25),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Haven't any account?",
-                        style: poppinsStyle(
-                          color: primaryColor,
-                          fontWeight: FontWeight.w400,
-                        ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'This is the desc of sign in lorem ipsum',
+                      textAlign: TextAlign.center,
+                      style: poppinsStyle(
+                        fontSize: 13,
+                        color: Colors.grey,
                       ),
-                      TextButton(
+                    ),
+                    const SizedBox(height: 25),
+                    _buildInputField(
+                      controller: _usernameController,
+                      hintText: 'username',
+                      icon: Icons.person_outline,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInputField(
+                      controller: _passwordController,
+                      hintText: 'password',
+                      icon: Icons.lock_outline,
+                      isPassword: true,
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
                         onPressed: () {},
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(50, 30),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
                         child: Text(
-                          'Sign Up',
+                          'Forgot password?',
                           style: poppinsStyle(
+                            fontSize: 14,
                             color: accentColor,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 100),
-                ],
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Login',
+                        style: poppinsStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 17,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Haven’t any account?",
+                          style: poppinsStyle(fontSize: 14),
+                        ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () {},
+                          child: Text(
+                            'Sign Up',
+                            style: poppinsStyle(
+                              fontSize: 14,
+                              color: accentColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 25),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            '–  OR  –',
+                            style: TextStyle(
+                                color: Color.fromARGB(255, 197, 197, 197)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 25),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: Image.asset(
+                        'assets/images/google.png',
+                        width: 22,
+                        height: 22,
+                      ),
+                      label: Text(
+                        'Sign in with Google',
+                        style: poppinsStyle(fontWeight: FontWeight.w500),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        side: const BorderSide(
+                          // 👉 letakkan di sini, sejajar dengan shape
+                          color: Color.fromARGB(255, 226, 226, 226),
+                          width: 0.7,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
 
-          const Align(
-            alignment: Alignment.bottomCenter,
-            child: CurvedGreenShape(),
-          ),
-
-          // ALERT DI BAGIAN ATAS
+          // ALERT FLOATING
           if (_showAlert)
             Positioned(
               top: 40,
@@ -199,11 +241,10 @@ class _SignInPageState extends State<SignInPage> {
               right: 20,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 400),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: _isSuccess
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFFF5252),
+                  color:
+                      _isSuccess ? Colors.green.shade600 : Colors.red.shade400,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -218,25 +259,15 @@ class _SignInPageState extends State<SignInPage> {
                     Icon(
                       _isSuccess ? Icons.check_circle : Icons.error_outline,
                       color: Colors.white,
-                      size: 28,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         _alertMessage,
                         style: poppinsStyle(
-                          fontSize: 15,
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => setState(() => _showAlert = false),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white70,
-                        size: 22,
                       ),
                     ),
                   ],
@@ -248,8 +279,7 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  Widget _buildInputField(
-    BuildContext context, {
+  Widget _buildInputField({
     required TextEditingController controller,
     required String hintText,
     required IconData icon,
@@ -259,29 +289,18 @@ class _SignInPageState extends State<SignInPage> {
       decoration: BoxDecoration(
         color: inputFillColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.transparent),
       ),
       child: TextField(
         controller: controller,
         obscureText: isPassword,
-        style: poppinsStyle(
-          fontWeight: FontWeight.w500,
-          color: primaryColor,
-        ),
+        style: poppinsStyle(fontWeight: FontWeight.w500),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: poppinsStyle(
-            fontWeight: FontWeight.w400,
-            color: Colors.grey,
-          ),
+          hintStyle: poppinsStyle(color: Colors.grey),
           prefixIcon: Icon(icon, color: primaryColor.withOpacity(0.6)),
-          suffixIcon: isPassword
-              ? Icon(Icons.visibility_off_outlined,
-                  color: primaryColor.withOpacity(0.6))
-              : null,
           border: InputBorder.none,
           contentPadding:
-              const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+              const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
         ),
       ),
     );
